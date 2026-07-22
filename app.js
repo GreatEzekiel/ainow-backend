@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = "https://ainow-backend.onrender.com/api/v1";
 let apexChartInstance = null;
 let currentTicker = "MTNCOM";
 
@@ -188,7 +188,7 @@ async function loginUser(username, password) {
     formData.append("username", username);
     formData.append("password", password);
 
-    const response = await fetch("http://127.0.0.1:8000/api/v1/auth/token", {
+    const response = await fetch("https://ainow-backend.onrender.com/api/v1/auth/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData
