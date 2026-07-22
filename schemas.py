@@ -1,11 +1,22 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
+from typing import List, Optional
+from pydantic import BaseModel, EmailStr
 
-class ModelMetricsResponse(BaseModel):
-    accuracy: float
-    precision: float
-    recall: float
-    feature_importances: Dict[str, float]
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 class MarketMetricsResponse(BaseModel):
     latest_date: str
@@ -30,14 +41,14 @@ class TickerSummary(BaseModel):
     prediction_label: str
     confidence: int
 
-class CandlePoint(BaseModel):
+class CandlestickPoint(BaseModel):
     x: str
-    y: List[float] = Field(..., description="[Open, High, Low, Close]")
+    y: List[float]
 
 class CandlestickResponse(BaseModel):
     ticker: str
     total_candles: int
-    series: List[CandlePoint]
+    series: List[CandlestickPoint]
 
 class InferenceRequest(BaseModel):
     ticker: str
@@ -53,27 +64,3 @@ class InferenceResponse(BaseModel):
     prediction: int
     prediction_label: str
     confidence: float
-
-
-# --- Existing Schemas (ModelMetricsResponse, TickerSummary, etc.) ---
-
-# --- JWT & Auth Schemas ---
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-class UserBase(BaseModel):
-    username: str
-    email: str
-
-class UserCreate(UserBase):
-    password: str
-
-class UserResponse(UserBase):
-    is_active: bool = True
-
-class UserInDB(UserResponse):
-    hashed_password: str

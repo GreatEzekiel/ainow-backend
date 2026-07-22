@@ -1,6 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import random
 from typing import List, Optional
@@ -8,12 +8,10 @@ from typing import List, Optional
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     FastAPI,
     HTTPException,
     Query,
-    Request,
     WebSocket,
     WebSocketDisconnect,
     status,
@@ -22,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 import joblib
 import numpy as np
-import pandas as pd
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 import auth
@@ -31,114 +29,42 @@ import models
 import schemas
 from websocket_manager import manager
 
-# -------------------------------------------------------------------
-# CONFIGURATION & CONSTANTS
-# -------------------------------------------------------------------
-
-EXCEL_FILE = "Data.xlsx"
 MODEL_FILE = "ngx_model.pkl"
-
 scheduler = BackgroundScheduler()
 
 
-# -------------------------------------------------------------------
-# HELPER FUNCTIONS & BACKGROUND TASKS
-# -------------------------------------------------------------------
-
-def calculate_rsi(series: pd.Series, period: int = 14) -> pd.Series:
-    """Calculates Relative Strength Index (RSI)."""
-    delta = series.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss.replace(0, np.nan)
-    rsi = 100 - (100 / (1 + rs))
-    return rsi.fillna(50.0)
-
-
-def load_and_preprocess_dataset():
-    """Loads Excel workbook sheets and computes technical features."""
-    if not os.path.exists(EXCEL_FILE):
-        raise FileNotFoundError(f"Dataset file '{EXCEL_FILE}' not found.")
-
-    df_prices = pd.read_excel(EXCEL_FILE, sheet_name="Company_Prices")
-    df_asi = pd.read_excel(EXCEL_FILE, sheet_name="Synthetic_ASI")
-
-    df_prices["Date"] = pd.to_datetime(df_prices["Date"])
-    df_asi["Date"] = pd.to_datetime(df_asi["Date"])
-
-    # Sort sequentially for accurate technical calculations
-    df_prices = df_prices.sort_values(by=["Ticker", "Date"]).reset_index(drop=True)
-
-    # Compute Moving Averages (SMA10, SMA20) and RSI14 per Ticker
-    df_prices["SMA_10"] = df_prices.groupby("Ticker")["Close"].transform(
-        lambda x: x.rolling(10, min_periods=1).mean()
-    )
-    df_prices["SMA_20"] = df_prices.groupby("Ticker")["Close"].transform(
-        lambda x: x.rolling(20, min_periods=1).mean()
-    )
-    df_prices["RSI_14"] = df_prices.groupby("Ticker")["Close"].transform(
-        lambda x: calculate_rsi(x, 14)
-    )
-
-    return df_prices, df_asi
-
-
-def refresh_market_data():
-    """Background task executed automatically after market close."""
-    print("🔄 [Cron] Refreshing market data and recalculating indicators...")
-    try:
-        df = pd.read_excel("Synthetic_NGX_Feb2026_to_July2026.xlsx", sheet_name="Company_Prices")
-        app.state.df_prices = df
-        print("✅ [Cron] Market data successfully refreshed.")
-    except Exception as e:
-        print(f"❌ [Cron] Data refresh failed: {e}")
-
-
 async def start_market_tick_simulator():
-    """Background task simulating real-time market price movements."""
+    """Background task simulating real-time market price movements over WebSockets."""
     tickers = ["MTNCOM", "DANGCEM", "GUARANTY", "ZENITHBANK", "BUACEMENT"]
+    try:
+        while True:
+            await asyncio.sleep(2)
+            if manager.active_connections:
+                selected_ticker = random.choice(tickers)
+                price_delta = round(random.uniform(-1.50, 2.00), 2)
+                base_price = round(random.uniform(200, 500), 2)
+                new_price = round(base_price + price_delta, 2)
 
-    while True:
-        await asyncio.sleep(2)  # Emit tick every 2 seconds
+                tick_payload = {
+                    "ticker": selected_ticker,
+                    "price": new_price,
+                    "change": price_delta,
+                    "timestamp": datetime.now().strftime("%H:%M:%S"),
+                }
+                await manager.broadcast(tick_payload)
+    except asyncio.CancelledError:
+        print("🛑 Tick simulator task cancelled.")
 
-        if manager.active_connections:
-            selected_ticker = random.choice(tickers)
-            price_delta = round(random.uniform(-1.50, 2.00), 2)
-            base_price = round(random.uniform(200, 500), 2)
-            new_price = round(base_price + price_delta, 2)
-
-            tick_payload = {
-                "ticker": selected_ticker,
-                "price": new_price,
-                "change": price_delta,
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
-            }
-
-            await manager.broadcast(tick_payload)
-
-
-# -------------------------------------------------------------------
-# CONSOLIDATED LIFESPAN STATE MANAGER
-# -------------------------------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Handles startup tasks (loading data, ML models, DB creation, schedulers)."""
+    """Lifecycle manager for startup and shutdown procedures."""
     print("🚀 Initializing NGX Predictor API service...")
 
-    # 1. Create DB Tables
+    # 1. Initialize DB Schema
     Base.metadata.create_all(bind=engine)
 
-    # 2. Load Excel Data
-    try:
-        app.state.df_prices, app.state.df_asi = load_and_preprocess_dataset()
-        print(f"✅ Data loaded: {len(app.state.df_prices)} price records indexed.")
-    except Exception as e:
-        print(f"⚠️ Error loading Excel dataset: {e}")
-        app.state.df_prices = pd.DataFrame()
-        app.state.df_asi = pd.DataFrame()
-
-    # 3. Load ML Model
+    # 2. Load Machine Learning Model
     if os.path.exists(MODEL_FILE):
         try:
             app.state.model = joblib.load(MODEL_FILE)
@@ -150,23 +76,22 @@ async def lifespan(app: FastAPI):
         app.state.model = None
         print("ℹ️ No model file found. Running in heuristic simulation mode.")
 
-    # 4. Start Background Scheduler
-    scheduler.add_job(refresh_market_data, "cron", hour=18, minute=0)
+    # 3. Start Scheduler & WebSocket Tick Task
     scheduler.start()
+    tick_task = asyncio.create_task(start_market_tick_simulator())
 
-    # 5. Start Real-time WebSocket Feed Generator
-    asyncio.create_task(start_market_tick_simulator())
+    yield
 
-    yield  # Application runs here
+    # Clean shutdown
+    tick_task.cancel()
+    try:
+        await tick_task
+    except asyncio.CancelledError:
+        pass
 
-    # Cleanup on shutdown
     scheduler.shutdown()
     print("🛑 Shutting down NGX Predictor API service...")
 
-
-# -------------------------------------------------------------------
-# FASTAPI APP SETUP
-# -------------------------------------------------------------------
 
 app = FastAPI(
     title="NGX AI Market Predictor API",
@@ -175,7 +100,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -227,30 +151,26 @@ def login_for_access_token(
 
 
 # -------------------------------------------------------------------
-# MARKET DATA & PREDICTION ENDPOINTS
+# MARKET DATA ENDPOINTS (Database Query Powered)
 # -------------------------------------------------------------------
 
 @api_router.get("/metrics", response_model=schemas.MarketMetricsResponse)
-def get_market_metrics():
-    """Returns top KPI bar summary statistics."""
-    df_prices = app.state.df_prices
-    df_asi = app.state.df_asi
+def get_market_metrics(db: Session = Depends(get_db)):
+    """Returns overall market performance KPI metrics directly from database."""
+    latest_date = db.query(func.max(models.CompanyPrice.date)).scalar()
+    if not latest_date:
+        raise HTTPException(status_code=404, detail="No market data available in database.")
 
-    if df_prices.empty:
-        raise HTTPException(status_code=500, detail="Market data uninitialized.")
+    latest_prices = db.query(models.CompanyPrice).filter(models.CompanyPrice.date == latest_date).all()
+    latest_asi = db.query(models.MarketIndex).order_by(models.MarketIndex.date.desc()).first()
 
-    latest_date = df_prices["Date"].max()
-    latest_prices = df_prices[df_prices["Date"] == latest_date]
-    latest_asi = df_asi[df_asi["Date"] == df_asi["Date"].max()]
+    if not latest_prices:
+        raise HTTPException(status_code=404, detail="No records found for latest market date.")
 
-    avg_open = float(latest_prices["Open"].mean())
-    avg_close = float(latest_prices["Close"].mean())
-    avg_return = float(latest_prices["Daily_Return"].mean())
-    asi_val = (
-        float(latest_asi["Synthetic_NGX_ASI"].values[0])
-        if not latest_asi.empty
-        else avg_close
-    )
+    avg_open = float(np.mean([p.open_price for p in latest_prices]))
+    avg_close = float(np.mean([p.close_price for p in latest_prices]))
+    avg_return = float(np.mean([p.daily_return for p in latest_prices]))
+    asi_val = float(latest_asi.synthetic_ngx_asi) if latest_asi else avg_close
 
     return {
         "latest_date": latest_date.strftime("%Y-%m-%d"),
@@ -264,33 +184,35 @@ def get_market_metrics():
 
 @api_router.get("/tickers", response_model=List[schemas.TickerSummary])
 def get_tickers_data(
-    request: Request,
     search: Optional[str] = Query(None, description="Search ticker by name"),
     sort_by: str = Query("change_pct", description="Sort by 'change_pct', 'close_price', or 'ticker'"),
-    current_user: schemas.UserResponse = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """Returns latest stock performance, technical indicators, and predictions (Protected)."""
-    df_prices = app.state.df_prices
-    if df_prices.empty:
-        raise HTTPException(status_code=500, detail="Market data uninitialized.")
+    """Returns latest stock prices, indicators, and ML predictions queried directly from database."""
+    latest_date = db.query(func.max(models.CompanyPrice.date)).scalar()
+    if not latest_date:
+        raise HTTPException(status_code=404, detail="No market data available in database.")
 
-    latest_date = df_prices["Date"].max()
-    latest_df = df_prices[df_prices["Date"] == latest_date].copy()
-    market_avg_close = float(latest_df["Close"].mean())
-
+    query = db.query(models.CompanyPrice).filter(models.CompanyPrice.date == latest_date)
     if search:
-        latest_df = latest_df[latest_df["Ticker"].str.contains(search.upper(), na=False)]
+        query = query.filter(models.CompanyPrice.ticker.ilike(f"%{search}%"))
+
+    latest_prices = query.all()
+    if not latest_prices:
+        return []
+
+    all_latest = db.query(models.CompanyPrice).filter(models.CompanyPrice.date == latest_date).all()
+    market_avg_close = float(np.mean([p.close_price for p in all_latest])) if all_latest else 0.0
 
     results = []
-    for _, row in latest_df.iterrows():
-        close_val = float(row["Close"])
-        open_val = float(row["Open"])
-        daily_return = float(row["Daily_Return"])
-        rsi_val = float(row["RSI_14"])
-        sma10 = float(row["SMA_10"])
-        sma20 = float(row["SMA_20"])
+    for row in latest_prices:
+        close_val = float(row.close_price)
+        open_val = float(row.open_price)
+        daily_return = float(row.daily_return)
+        rsi_val = float(row.rsi_14 or 50.0)
+        sma10 = float(row.sma_10 or close_val)
+        sma20 = float(row.sma_20 or close_val)
 
-        # Predict using loaded model or rule-based fallback
         if app.state.model is not None:
             features = np.array([[open_val, close_val, daily_return, rsi_val, sma10, sma20]])
             pred = int(app.state.model.predict(features)[0])
@@ -300,11 +222,11 @@ def get_tickers_data(
             prob = float(np.random.randint(75, 95))
 
         results.append({
-            "ticker": str(row["Ticker"]),
+            "ticker": str(row.ticker),
             "open_price": round(open_val, 2),
             "close_price": round(close_val, 2),
-            "high_price": round(float(row["High"]), 2),
-            "low_price": round(float(row["Low"]), 2),
+            "high_price": round(float(row.high_price), 2),
+            "low_price": round(float(row.low_price), 2),
             "change_pct": round(daily_return * 100, 2),
             "vs_market_avg": round(close_val - market_avg_close, 2),
             "rsi_14": round(rsi_val, 2),
@@ -324,25 +246,29 @@ def get_tickers_data(
 
 
 @api_router.get("/chart/{ticker}", response_model=schemas.CandlestickResponse)
-def get_candlestick_chart(ticker: str):
-    """Returns historical OHLC array formatted for ApexCharts."""
-    df_prices = app.state.df_prices
-    ticker_df = df_prices[df_prices["Ticker"].str.upper() == ticker.upper()].sort_values("Date")
+def get_candlestick_chart(ticker: str, db: Session = Depends(get_db)):
+    """Returns historical OHLC array formatted for ApexCharts from database."""
+    records = (
+        db.query(models.CompanyPrice)
+        .filter(models.CompanyPrice.ticker.ilike(ticker))
+        .order_by(models.CompanyPrice.date.asc())
+        .all()
+    )
 
-    if ticker_df.empty:
-        raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' not found in dataset.")
+    if not records:
+        raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' not found in database.")
 
     chart_series = [
         {
-            "x": row["Date"].strftime("%Y-%m-%d"),
+            "x": row.date.strftime("%Y-%m-%d"),
             "y": [
-                round(float(row["Open"]), 2),
-                round(float(row["High"]), 2),
-                round(float(row["Low"]), 2),
-                round(float(row["Close"]), 2),
+                round(float(row.open_price), 2),
+                round(float(row.high_price), 2),
+                round(float(row.low_price), 2),
+                round(float(row.close_price), 2),
             ],
         }
-        for _, row in ticker_df.iterrows()
+        for row in records
     ]
 
     return {
@@ -379,18 +305,6 @@ def predict_single_stock(payload: schemas.InferenceRequest):
     }
 
 
-@api_router.post("/reload")
-def reload_dataset(background_tasks: BackgroundTasks):
-    """Reloads Excel dataset from disk asynchronously."""
-    def task():
-        app.state.df_prices, app.state.df_asi = load_and_preprocess_dataset()
-        print("🔄 Dataset reloaded into memory.")
-
-    background_tasks.add_task(task)
-    return {"message": "Dataset reload initiated in background."}
-
-
-# Attach router to FastAPI app
 app.include_router(api_router)
 
 
