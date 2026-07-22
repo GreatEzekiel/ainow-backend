@@ -1,30 +1,44 @@
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr
+from typing import List, Dict, Optional
+from pydantic import BaseModel, EmailStr, Field
 
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: str
-
-    class Config:
-        from_attributes = True
-
+# --- Auth & User Schemas ---
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+
+class UserResponse(UserBase):
+    id: int
+    is_active: bool = True
+
+    class Config:
+        from_attributes = True
+
+class UserInDB(UserResponse):
+    hashed_password: str
+
+# --- Market & Prediction Schemas ---
+class ModelMetricsResponse(BaseModel):
+    accuracy: float
+    precision: float
+    recall: float
+    feature_importances: Dict[str, float]
+
 class MarketMetricsResponse(BaseModel):
     latest_date: str
-    market_avg_price: float
-    market_open_avg: float
-    market_close_avg: float
-    market_return_pct: float
-    synthetic_asi: float
+    avg_open: float
+    avg_close: float
+    avg_return: float
+    synthetic_ngx_asi: float
 
 class TickerSummary(BaseModel):
     ticker: str
@@ -39,11 +53,11 @@ class TickerSummary(BaseModel):
     sma_20: float
     prediction: int
     prediction_label: str
-    confidence: int
+    confidence: float
 
 class CandlestickPoint(BaseModel):
     x: str
-    y: List[float]
+    y: List[float] = Field(..., description="[Open, High, Low, Close]")
 
 class CandlestickResponse(BaseModel):
     ticker: str
@@ -52,12 +66,6 @@ class CandlestickResponse(BaseModel):
 
 class InferenceRequest(BaseModel):
     ticker: str
-    open_price: float
-    close_price: float
-    daily_return: float
-    rsi_14: float
-    sma_10: float
-    sma_20: float
 
 class InferenceResponse(BaseModel):
     ticker: str
