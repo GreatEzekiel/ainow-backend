@@ -86,6 +86,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Place this in main.py after creating the `app = FastAPI(...)` instance
+
+@app.get("/", tags=["Health Check"])
+def root():
+    return {
+        "status": "online",
+        "service": "NGX AI Market Predictor API",
+        "version": "1.0.0",
+        "documentation": "/docs"
+    }
+
 # Enable CORS (Required for external Streamlit frontends)
 app.add_middleware(
     CORSMiddleware,
