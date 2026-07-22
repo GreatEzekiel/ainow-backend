@@ -10,6 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
 
+
+import joblib
+
+model = joblib.load("models/model.pkl")
+
 # Absolute path resolution ensures cloud environments find local assets regardless of working directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 EXCEL_FILE = os.path.join(BASE_DIR, "Data.xlsx")

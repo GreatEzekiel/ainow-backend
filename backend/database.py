@@ -9,7 +9,7 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
 )
 
 # Render provides URLs starting with 'postgres://', but SQLAlchemy 1.4+ requires 'postgresql://'
-if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+if SQLALCHEMY_DATABASE_URL.startswith("postgres:"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Configure sqlite vs postgresql engine parameters
