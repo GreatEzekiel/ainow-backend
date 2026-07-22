@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ngx_postgres
+    environment:
+      POSTGRES_USER: ngx_user
+      POSTGRES_PASSWORD: ngx_password
+      POSTGRES_DB: ngx_predictions
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  ngx-api:
+    build: .
+    container_name: ngx_predictor_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ngx_user:ngx_password@db:5432/ngx_predictions
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  postgres_data:

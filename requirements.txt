@@ -1,0 +1,16 @@
+fastapi[standard]
+uvicorn
+pandas
+openpyxl
+pydantic
+numpy
+scikit-learn
+joblib
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+sqlalchemy
+psycopg2-binary
+alembic
+passlib[bcrypt]==1.7.4
+bcrypt==4.3.0

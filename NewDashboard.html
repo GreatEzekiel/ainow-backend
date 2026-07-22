@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGX AI Predictor | Enterprise Dashboard & Data Matrix</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        ngx: { dark: '#0B1120', card: '#111827', accent: '#10B981' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Animation Library (AOS) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Charting Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <style>
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .light .glass {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        .light ::-webkit-scrollbar-thumb { background: #CBD5E1; }
+
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        .toast-enter { animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-exit { animation: fadeOut 0.25s ease-in forwards; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-ngx-dark dark:text-gray-100 font-sans antialiased transition-colors duration-300 flex h-screen overflow-hidden">
+
+    <!-- Interactive Toast Notification Container -->
+    <div id="toast-container" class="fixed top-24 right-8 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-20 lg:w-64 glass flex flex-col justify-between transition-all duration-300 z-20 shrink-0">
+        <div>
+            <div class="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-200 dark:border-gray-800">
+                <i class="fas fa-chart-line text-ngx-accent text-2xl"></i>
+                <span class="hidden lg:block ml-3 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ngx-accent to-blue-500">NGX AI Platform</span>
+            </div>
+            <nav class="mt-6 flex flex-col space-y-2 px-3">
+                <a href="#overview-section" class="flex items-center px-3 py-3 bg-gray-200 dark:bg-gray-800 rounded-xl text-blue-600 dark:text-blue-400 group transition">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="hidden lg:block ml-4 font-medium">Dashboard</span>
+                </a>
+                <a href="#portfolio-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
+                    <i class="fas fa-briefcase text-lg"></i>
+                    <span class="hidden lg:block ml-4 font-medium">Portfolio</span>
+                </a>
+                <a href="#predictions-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
+                    <i class="fas fa-brain text-lg"></i>
+                    <span class="hidden lg:block ml-4 font-medium">AI Predictions</span>
+                </a>
+                <a href="#matrix-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
+                    <i class="fas fa-database text-lg"></i>
+                    <span class="hidden lg:block ml-4 font-medium">Data Matrix</span>
+                </a>
+            </nav>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
+            <div class="hidden lg:block p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50">
+                <div class="flex items-center text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
+                    <i class="fas fa-database mr-1.5"></i> Active Dataset
+                </div>
+                <p class="text-[11px] text-blue-600 dark:text-blue-400 font-mono truncate">Synthetic_NGX_Feb2026_to_July2026.xlsx</p>
+            </div>
+            <button id="theme-toggle" class="w-full flex items-center justify-center lg:justify-start px-3 py-2.5 bg-gray-200 dark:bg-gray-800 rounded-xl transition hover:bg-gray-300 dark:hover:bg-gray-700">
+                <i class="fas fa-moon dark:hidden text-gray-600"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                <span class="hidden lg:block ml-3 font-medium text-sm">Toggle Theme</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        
+        <!-- Top Header -->
+        <header class="h-20 glass flex items-center justify-between px-8 z-10 shrink-0 border-b border-gray-200 dark:border-gray-800">
+            <div class="flex items-center w-1/3">
+                <div class="relative w-full max-w-md">
+                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                    <input type="text" placeholder="Search NGX stocks, sectors, or indicators..." class="w-full bg-gray-100 dark:bg-gray-800/60 border border-gray-300 dark:border-gray-700 rounded-full py-2.5 pl-12 pr-4 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 transition shadow-sm text-sm">
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="hidden md:flex items-center space-x-2 text-xs font-semibold px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-ngx-accent rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-ngx-accent animate-pulse"></span>
+                    <span>NGX Market Live</span>
+                </div>
+                <button class="relative text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </button>
+                <div class="flex items-center space-x-3 cursor-pointer">
+                    <img src="https://ui-avatars.com/api/?name=Chinedu+O&background=10B981&color=fff" alt="User" class="w-10 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-semibold">Chinedu O.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Institutional Analyst</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Dashboard Content -->
+        <div class="flex-1 overflow-y-auto p-8 z-0 space-y-8">
+            
+            <!-- Welcome & Portfolio Summary -->
+            <div id="overview-section" class="flex flex-col lg:flex-row justify-between items-start lg:items-center" data-aos="fade-in">
+                <div>
+                    <h1 class="text-3xl font-bold">Welcome back, Chinedu</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Real-time Nigerian Exchange Group (NGX) analytics & ML predictions for July 2026.</p>
+                </div>
+                <div class="mt-4 lg:mt-0 flex space-x-4">
+                    <button class="px-5 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 font-medium transition text-sm shadow-sm">Export Data</button>
+                    <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-ngx-accent to-blue-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/30 transition text-sm shadow-md">Run Model Retraining</button>
+                </div>
+            </div>
+
+            <!-- Top KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Portfolio Card -->
+                <div class="glass p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300" data-aos="fade-up" data-aos-delay="0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Total Portfolio</p>
+                            <h3 class="text-2xl font-bold mt-1">₦14,520,000</h3>
+                        </div>
+                        <div class="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400"><i class="fas fa-wallet text-lg"></i></div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs">
+                        <span class="text-ngx-accent font-semibold"><i class="fas fa-arrow-up mr-1"></i>+2.4%</span>
+                        <span class="text-gray-500 dark:text-gray-400 ml-2">vs last month</span>
+                    </div>
+                </div>
+
+                <!-- NGX ASI Card -->
+                <div class="glass p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300" data-aos="fade-up" data-aos-delay="100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Synthetic NGX ASI</p>
+                            <h3 class="text-2xl font-bold mt-1">381.15</h3>
+                        </div>
+                        <div class="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-ngx-accent"><i class="fas fa-chart-line text-lg"></i></div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs">
+                        <span class="text-ngx-accent font-semibold"><i class="fas fa-arrow-up mr-1"></i>+5.59%</span>
+                        <span class="text-gray-500 dark:text-gray-400 ml-2">Daily Index Return</span>
+                    </div>
+                </div>
+
+                <!-- Active AI Predictions -->
+                <div class="glass p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Active ML Predictions</p>
+                            <h3 class="text-2xl font-bold mt-1">10 Equities</h3>
+                        </div>
+                        <div class="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400"><i class="fas fa-robot text-lg"></i></div>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs">
+                        <span class="text-emerald-500 font-medium">5 Bullish</span>
+                        <span class="text-gray-400 mx-1.5">•</span>
+                        <span class="text-red-500 font-medium">5 Bearish</span>
+                    </div>
+                </div>
+
+                <!-- Market Sentiment -->
+                <div class="glass p-6 rounded-2xl shadow-sm hover:-translate-y-1 transition duration-300" data-aos="fade-up" data-aos-delay="300">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Dataset Horizon</p>
+                            <h3 class="text-2xl font-bold mt-1 text-ngx-accent">Feb - Jul 2026</h3>
+                        </div>
+                        <div class="p-2.5 bg-orange-100 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400"><i class="fas fa-calendar-alt text-lg"></i></div>
+                    </div>
+                    <div class="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                        <div class="bg-gradient-to-r from-blue-500 via-indigo-500 to-ngx-accent h-1.5 rounded-full" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Charts Section -->
+            <div id="portfolio-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Advanced Chart (ApexCharts Candlestick) -->
+                <div class="lg:col-span-2 glass p-6 rounded-2xl shadow-sm" data-aos="fade-up">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold flex items-center">
+                                <span>MTNCOM - MTN Communications Nigeria</span>
+                                <span class="ml-2 text-xs px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded font-semibold">Telecommunications</span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">July 2026 Price Action & Target Direction Data</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Close: <strong class="text-white">₦291.37</strong></span>
+                            <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-ngx-accent rounded font-bold">+1.73%</span>
+                        </div>
+                    </div>
+                    <div id="candlestick-chart" class="w-full h-80"></div>
+                </div>
+
+                <!-- Portfolio Performance (Chart.js Line) -->
+                <div class="glass p-6 rounded-2xl shadow-sm flex flex-col" data-aos="fade-up" data-aos-delay="100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Portfolio Growth</h3>
+                        <span class="text-xs font-semibold text-ngx-accent bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded">+21% YTD</span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full min-h-[260px]">
+                        <canvas id="portfolioChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Predictions & Watchlist Table -->
+            <div id="predictions-section" class="glass rounded-2xl shadow-sm overflow-hidden" data-aos="fade-up">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold">NGX AI Watchlist & Predictions</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Target Next Day Direction based on XGBoost/LightGBM model features</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="showToast('Filter Rules', 'Filter applied to show highest confidence models')" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-800 text-xs font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition">Filter</button>
+                        <a href="#matrix-section" class="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 font-semibold">View Data Matrix <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">Ticker & Company</th>
+                                <th class="p-4 font-semibold">Sector</th>
+                                <th class="p-4 font-semibold">Price (₦)</th>
+                                <th class="p-4 font-semibold">Daily Return</th>
+                                <th class="p-4 font-semibold">RSI (14)</th>
+                                <th class="p-4 font-semibold">Target Direction</th>
+                                <th class="p-4 font-semibold">Confidence</th>
+                                <th class="p-4 font-semibold text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">NGXBNK</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Nigerian Growth Bank Plc</div>
+                                </td>
+                                <td class="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Banking</td>
+                                <td class="p-4 font-semibold">110.50</td>
+                                <td class="p-4 text-ngx-accent font-semibold"><i class="fas fa-caret-up mr-1"></i>+4.59%</td>
+                                <td class="p-4 font-mono text-xs">64.14</td>
+                                <td class="p-4"><span class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-ngx-accent rounded-md font-medium text-xs">Likely Rise (1)</span></td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-xs font-semibold">88%</span>
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-ngx-accent h-1.5 rounded-full" style="width: 88%"></div></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-right"><button onclick="showToast('NGXBNK Details', 'Opening detail view for Nigerian Growth Bank')" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-chart-bar"></i></button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">AIRTELNG</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Airtel Nigeria Holdings Plc</div>
+                                </td>
+                                <td class="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Telecommunications</td>
+                                <td class="p-4 font-semibold">2,491.28</td>
+                                <td class="p-4 text-ngx-accent font-semibold"><i class="fas fa-caret-up mr-1"></i>+8.11%</td>
+                                <td class="p-4 font-mono text-xs">71.01</td>
+                                <td class="p-4"><span class="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-md font-medium text-xs">Likely Fall (0)</span></td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-xs font-semibold">91%</span>
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 91%"></div></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-right"><button onclick="showToast('AIRTELNG Details', 'Opening detail view for Airtel Nigeria')" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-chart-bar"></i></button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">DANGIND</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Dangote Industrial Products Plc</div>
+                                </td>
+                                <td class="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Industrial Goods</td>
+                                <td class="p-4 font-semibold">511.90</td>
+                                <td class="p-4 text-ngx-accent font-semibold"><i class="fas fa-caret-up mr-1"></i>+2.99%</td>
+                                <td class="p-4 font-mono text-xs">32.37</td>
+                                <td class="p-4"><span class="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-md font-medium text-xs">Likely Fall (0)</span></td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-xs font-semibold">76%</span>
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 76%"></div></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-right"><button onclick="showToast('DANGIND Details', 'Opening detail view for Dangote Industrial')" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-chart-bar"></i></button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">ZENFIN</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Zenith Financial Services Plc</div>
+                                </td>
+                                <td class="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Banking</td>
+                                <td class="p-4 font-semibold">88.59</td>
+                                <td class="p-4 text-ngx-accent font-semibold"><i class="fas fa-caret-up mr-1"></i>+4.00%</td>
+                                <td class="p-4 font-mono text-xs">54.39</td>
+                                <td class="p-4"><span class="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-md font-medium text-xs">Likely Fall (0)</span></td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-xs font-semibold">82%</span>
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 82%"></div></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-right"><button onclick="showToast('ZENFIN Details', 'Opening detail view for Zenith Financial')" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-chart-bar"></i></button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-900 dark:text-white">MTNCOM</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">MTN Communications Nigeria Plc</div>
+                                </td>
+                                <td class="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Telecommunications</td>
+                                <td class="p-4 font-semibold">291.37</td>
+                                <td class="p-4 text-ngx-accent font-semibold"><i class="fas fa-caret-up mr-1"></i>+1.73%</td>
+                                <td class="p-4 font-mono text-xs">34.77</td>
+                                <td class="p-4"><span class="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-md font-medium text-xs">Likely Fall (0)</span></td>
+                                <td class="p-4">
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-xs font-semibold">85%</span>
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 85%"></div></div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-right"><button onclick="showToast('MTNCOM Details', 'Opening detail view for MTN Nigeria')" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-chart-bar"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INTEGRATED DATA FEATURE MATRIX SECTION -->
+            <div id="matrix-section" class="space-y-6" data-aos="fade-up">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-database text-ngx-accent mr-3"></i>
+                            <span>Data Features & Availability Matrix</span>
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Audited mapping against <code class="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-blue-500">Synthetic_NGX_Feb2026_to_July2026.xlsx</code></p>
+                    </div>
+                    <div class="text-xs font-medium px-3 py-1.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-800 self-start sm:self-auto">
+                        <i class="fas fa-check-circle mr-1.5 text-emerald-500"></i> Active Excel Ingestion
+                    </div>
+                </div>
+
+                <!-- AVAILABLE DATA CARD -->
+                <div class="glass p-6 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-base font-bold text-emerald-600 dark:text-ngx-accent flex items-center">
+                            <i class="fas fa-check-double mr-2"></i> Features Available in Dataset
+                        </h3>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-ngx-accent rounded-full">Ready for ML</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">These variables are directly parsed from `Company_Prices` and `Synthetic_ASI` sheets and fed into XGBoost/LightGBM pipelines.</p>
+                    
+                    <div class="space-y-5">
+                        <!-- Core Market Data -->
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Core Price & Volume Metrics</h4>
+                            <div class="flex flex-wrap gap-2.5">
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-play text-[10px] mr-2 text-emerald-500"></i> Open Price
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-arrow-up text-[10px] mr-2 text-emerald-500"></i> High Price
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-arrow-down text-[10px] mr-2 text-emerald-500"></i> Low Price
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-stop text-[10px] mr-2 text-emerald-500"></i> Close Price
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-chart-bar text-[10px] mr-2 text-emerald-500"></i> Trading Volume
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-percentage text-[10px] mr-2 text-emerald-500"></i> Daily Return %
+                                </span>
+                                <span class="px-3.5 py-2 bg-emerald-100/80 text-emerald-900 dark:bg-emerald-900/30 dark:text-ngx-accent border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-globe-africa text-[10px] mr-2 text-emerald-500"></i> Synthetic NGX ASI
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Computed Technical Features -->
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Computed Indicators & AI Target</h4>
+                            <div class="flex flex-wrap gap-2.5">
+                                <span class="px-3.5 py-2 bg-blue-100/80 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-wave-square text-[10px] mr-2 text-blue-500"></i> RSI 14
+                                </span>
+                                <span class="px-3.5 py-2 bg-blue-100/80 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-line-chart text-[10px] mr-2 text-blue-500"></i> SMA 10
+                                </span>
+                                <span class="px-3.5 py-2 bg-blue-100/80 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-line-chart text-[10px] mr-2 text-blue-500"></i> SMA 20
+                                </span>
+                                <span class="px-3.5 py-2 bg-blue-100/80 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-semibold flex items-center">
+                                    <i class="fas fa-shield-alt text-[10px] mr-2 text-blue-500"></i> Volatility 20D
+                                </span>
+                                <span class="px-3.5 py-2 bg-purple-100/80 text-purple-900 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 rounded-xl text-xs font-bold flex items-center">
+                                    <i class="fas fa-bullseye text-[10px] mr-2 text-purple-400"></i> Target Next Day Direction
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MISSING DATA / INTERACTIVE WARNING CARD -->
+                <div class="glass p-6 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-base font-bold text-amber-600 dark:text-amber-400 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> Features Requiring External Aggregation
+                        </h3>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 rounded-full">Interactive Matrix</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">Click on any missing feature below to verify API connection status. Unlinked factors will trigger an immediate status toast.</p>
+                    
+                    <div class="space-y-6">
+                        <!-- Missing Technical Indicators -->
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Advanced Technical Oscillators</h4>
+                            <div class="flex flex-wrap gap-2.5">
+                                <button onclick="showToast('MACD Indicator', 'Not available in current dataset sheet. Requires historical EMA calculations.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> MACD & Signal Line
+                                </button>
+                                <button onclick="showToast('Exponential Moving Average', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> EMA (50, 100, 200)
+                                </button>
+                                <button onclick="showToast('Bollinger Bands', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Bollinger Bands
+                                </button>
+                                <button onclick="showToast('VWAP (Volume Weighted Avg Price)', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> VWAP & OBV
+                                </button>
+                                <button onclick="showToast('Ichimoku Kinko Hyo', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Ichimoku Cloud
+                                </button>
+                                <button onclick="showToast('Stochastic Oscillator', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Stochastic %K / %D
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Macroeconomic Data -->
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Macroeconomic Factors (CBN / NBS)</h4>
+                            <div class="flex flex-wrap gap-2.5">
+                                <button onclick="showToast('Nigeria Inflation Rate', 'Not available in active file. Requires CBN/NBS API integration.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Inflation Rate (CPI)
+                                </button>
+                                <button onclick="showToast('MPR (Monetary Policy Rate)', 'Not available in active file. Requires CBN API.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Interest Rate / MPR
+                                </button>
+                                <button onclick="showToast('USD/NGN Exchange Rate', 'Not available in active file. Requires FX rate feed.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> NAFEM Exchange Rate
+                                </button>
+                                <button onclick="showToast('Crude Oil Price (Brent)', 'Not available in active file. Requires global commodities feed.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Brent Crude Oil Price
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sentiment & Fundamental Actions -->
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Corporate Actions & NLP Sentiment</h4>
+                            <div class="flex flex-wrap gap-2.5">
+                                <button onclick="showToast('Financial News Sentiment', 'Not available now. Requires Web Scraper / FinBERT NLP model.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> News NLP Sentiment Score
+                                </button>
+                                <button onclick="showToast('Dividends & Dates', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Dividend Yield & History
+                                </button>
+                                <button onclick="showToast('Earnings Calendar', 'Not available in current dataset sheet.')" class="px-3.5 py-2 bg-gray-200/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700/80 rounded-xl text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-700 hover:border-amber-500/50 transition shadow-sm flex items-center group">
+                                    <i class="fas fa-ban mr-2 text-xs text-gray-400 group-hover:text-amber-400 transition"></i> Quarterly Earnings Reports
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS Animations
+        AOS.init({ once: true, duration: 700 });
+
+        // Toast Notification Function
+        function showToast(featureName, message) {
+            const container = document.getElementById('toast-container');
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-enter pointer-events-auto flex items-start p-4 w-80 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-xl shadow-2xl glass border border-amber-500/30 dark:border-amber-500/20';
+            
+            toast.innerHTML = `
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-amber-500 bg-amber-100 dark:bg-amber-950/60 rounded-lg mr-3 mt-0.5">
+                    <i class="fas fa-exclamation-triangle text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-gray-900 dark:text-white mb-0.5">${featureName}</p>
+                    <p class="text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">${message}</p>
+                    <p class="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-1.5 uppercase tracking-wider">Status: Not Available Now</p>
+                </div>
+                <button type="button" class="ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg p-1 transition" onclick="this.closest('.toast-enter').remove()">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto dismiss after 3.5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 250);
+                }
+            }, 3500);
+        }
+
+        // Theme Toggle Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        if (localStorage.getItem('color-theme') === 'light' || (!('color-theme' in localStorage) && !window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.remove('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('color-theme', 'dark');
+                updateCharts('dark');
+            } else {
+                localStorage.setItem('color-theme', 'light');
+                updateCharts('light');
+            }
+        });
+
+        const getChartColors = (theme) => {
+            return theme === 'dark' ? { text: '#9CA3AF', grid: '#374151' } : { text: '#4B5563', grid: '#E5E7EB' };
+        };
+
+        // 1. Chart.js Portfolio Line Chart
+        const ctx = document.getElementById('portfolioChart').getContext('2d');
+        
+        let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+        let portfolioChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+                datasets: [{
+                    label: 'Portfolio Value (₦)',
+                    data: [12000000, 12450000, 12800000, 13400000, 13950000, 14520000],
+                    borderColor: '#10B981',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#10B981',
+                    pointBorderColor: '#111827',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').text, font: { size: 10 } } },
+                    y: { 
+                        grid: { color: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').grid, borderDash: [4, 4] }, 
+                        ticks: { color: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').text, font: { size: 10 }, callback: (value) => '₦' + (value/1000000).toFixed(1) + 'M' } 
+                    }
+                }
+            }
+        });
+
+        // 2. ApexCharts Candlestick Chart with MTNCOM July 2026 Dataset Data
+        const candlestickOptions = {
+            series: [{
+                name: 'MTNCOM Price',
+                data: [
+                    { x: new Date('2026-07-08'), y: [329.63, 332.74, 315.22, 320.88] },
+                    { x: new Date('2026-07-09'), y: [320.88, 337.67, 320.06, 332.60] },
+                    { x: new Date('2026-07-10'), y: [332.60, 336.38, 324.82, 328.64] },
+                    { x: new Date('2026-07-13'), y: [328.64, 364.03, 322.11, 357.65] },
+                    { x: new Date('2026-07-14'), y: [357.65, 364.06, 331.28, 335.30] },
+                    { x: new Date('2026-07-15'), y: [335.30, 341.33, 303.14, 304.34] },
+                    { x: new Date('2026-07-16'), y: [304.34, 309.42, 299.14, 305.16] },
+                    { x: new Date('2026-07-17'), y: [305.16, 307.85, 285.56, 286.25] },
+                    { x: new Date('2026-07-20'), y: [286.25, 291.38, 281.99, 286.40] },
+                    { x: new Date('2026-07-21'), y: [286.40, 292.70, 279.51, 291.37] }
+                ]
+            }],
+            chart: {
+                type: 'candlestick',
+                height: 310,
+                background: 'transparent',
+                toolbar: { show: true, tools: { download: false, selection: true, zoom: true, pan: true } }
+            },
+            plotOptions: {
+                candlestick: {
+                    colors: { upward: '#10B981', downward: '#EF4444' },
+                    wick: { useFillColor: true }
+                }
+            },
+            xaxis: {
+                type: 'datetime',
+                labels: { style: { colors: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').text, fontSize: '11px' } },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                tooltip: { enabled: true },
+                labels: { style: { colors: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').text, fontSize: '11px' }, formatter: (value) => '₦' + value.toFixed(0) }
+            },
+            grid: {
+                borderColor: getChartColors(html.classList.contains('dark') ? 'dark' : 'light').grid,
+                strokeDashArray: 4,
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: true } }
+            },
+            theme: { mode: html.classList.contains('dark') ? 'dark' : 'light' }
+        };
+
+        let apexChart = new ApexCharts(document.querySelector("#candlestick-chart"), candlestickOptions);
+        apexChart.render();
+
+        function updateCharts(theme) {
+            const colors = getChartColors(theme);
+            
+            portfolioChart.options.scales.x.ticks.color = colors.text;
+            portfolioChart.options.scales.y.ticks.color = colors.text;
+            portfolioChart.options.scales.y.grid.color = colors.grid;
+            portfolioChart.update();
+
+            apexChart.updateOptions({
+                theme: { mode: theme },
+                xaxis: { labels: { style: { colors: colors.text } } },
+                yaxis: { labels: { style: { colors: colors.text } } },
+                grid: { borderColor: colors.grid }
+            });
+        }
+    </script>
+</body>
+</html>
