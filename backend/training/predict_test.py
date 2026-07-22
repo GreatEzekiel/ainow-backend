@@ -1,5 +1,5 @@
 import numpy as np
-from utils import setup_logger, load_artifact
+from backend.training.utils import setup_logger, load_artifact
 
 logger = setup_logger("predict_test")
 

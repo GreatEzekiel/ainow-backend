@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import setup_logger
+from backend.training.utils import setup_logger
 
 logger = setup_logger(__name__)
 

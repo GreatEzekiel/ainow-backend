@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from config import (
+from backend.Data.config import (
     init_data_directories,
     RAW_EXCEL_PATH,
     EXTERNAL_INDEX_PATH,

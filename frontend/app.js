@@ -1,284 +1,243 @@
-const API_BASE = "https://ainow-backend.onrender.com/api/v1";
-let apexChartInstance = null;
-let currentTicker = "MTNCOM";
+/**
+ * NGX Alpha Labs - Frontend Application Engine
+ */
 
-// -------------------------------------------------------------------
-// 1. Fetch & Render Top KPI Metrics
-// -------------------------------------------------------------------
-async function loadMetrics() {
+const API_BASE_URL = "http://localhost:8000/api";
+
+// LocalStorage Auth Management
+let currentUser = JSON.parse(localStorage.getItem('ngx_user')) || {
+    name: "Luky Seun",
+    email: "seun@firm.com",
+    role: "Senior Equity Strategist"
+};
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+    updateAuthUI();
+    initializeCharts();
+    fetchMarketSummary();
+});
+
+// ==========================================
+// AUTHENTICATION UI & API HANDLERS
+// ==========================================
+
+function updateAuthUI() {
+    const guestGroup = document.getElementById('auth-guest-group');
+    const userGroup = document.getElementById('auth-user-group');
+    const nameDisplay = document.getElementById('header-user-name');
+    const roleDisplay = document.getElementById('header-user-role');
+    const avatarImg = document.getElementById('header-avatar');
+
+    if (currentUser) {
+        if (guestGroup) guestGroup.classList.add('hidden');
+        if (userGroup) {
+            userGroup.classList.remove('hidden');
+            userGroup.classList.add('flex');
+        }
+        if (nameDisplay) nameDisplay.innerText = currentUser.name;
+        if (roleDisplay) roleDisplay.innerText = currentUser.role || 'Quant Analyst';
+        if (avatarImg) avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10B981&color=fff`;
+    } else {
+        if (guestGroup) guestGroup.classList.remove('hidden');
+        if (userGroup) {
+            userGroup.classList.add('hidden');
+            userGroup.classList.remove('flex');
+        }
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
     try {
-        const response = await fetch(`${API_BASE}/metrics`);
-        if (!response.ok) throw new Error("Metrics endpoint error");
-        
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
         const data = await response.json();
 
-        // Target dynamic HTML element IDs
-        if (document.getElementById("kpi-market-avg")) {
-            document.getElementById("kpi-market-avg").innerText = `₦${data.market_close_avg}`;
-        }
-        if (document.getElementById("kpi-asi-index")) {
-            document.getElementById("kpi-asi-index").innerText = data.synthetic_asi.toLocaleString();
-        }
-        if (document.getElementById("kpi-market-return")) {
-            const returnElem = document.getElementById("kpi-market-return");
-            returnElem.innerText = `${data.market_return_pct}%`;
-            returnElem.className = data.market_return_pct >= 0 ? "text-green-500" : "text-red-500";
-        }
-    } catch (error) {
-        console.error("Error loading market metrics:", error);
-    }
-}
-
-// -------------------------------------------------------------------
-// 2. Fetch & Render Predictions Watchlist Table
-// -------------------------------------------------------------------
-async function loadTickersTable(searchQuery = "") {
-    try {
-        const url = searchQuery 
-            ? `${API_BASE}/tickers?search=${encodeURIComponent(searchQuery)}`
-            : `${API_BASE}/tickers`;
-            
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Tickers endpoint error");
-        
-        const tickers = await response.json();
-        const tbody = document.getElementById("ticker-table-body");
-        if (!tbody) return;
-
-        if (tickers.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">No matching tickers found.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = tickers.map(item => {
-            const isBullish = item.prediction === 1;
-            const badgeClass = isBullish ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
-            const changeClass = item.change_pct >= 0 ? "text-green-600" : "text-red-600";
-
-            return `
-                <tr onclick="selectTicker('${item.ticker}')" class="hover:bg-slate-700 cursor-pointer transition-colors">
-                    <td class="font-bold py-3 px-4">${item.ticker}</td>
-                    <td class="py-3 px-4">₦${item.close_price.toFixed(2)}</td>
-                    <td class="py-3 px-4 ${changeClass}">${item.change_pct > 0 ? '+' : ''}${item.change_pct.toFixed(2)}%</td>
-                    <td class="py-3 px-4">${item.rsi_14.toFixed(1)}</td>
-                    <td class="py-3 px-4">₦${item.sma_10.toFixed(2)}</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-1 rounded text-xs font-semibold ${badgeClass}">
-                            ${item.prediction_label} (${item.confidence}%)
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join("");
-    } catch (error) {
-        console.error("Error loading watchlist table:", error);
-    }
-}
-
-// -------------------------------------------------------------------
-// 3. Fetch & Render ApexCharts Candlestick Chart
-// -------------------------------------------------------------------
-async function loadCandlestickChart(ticker) {
-    try {
-        const response = await fetch(`${API_BASE}/chart/${ticker}`);
-        if (!response.ok) throw new Error(`Chart data error for ${ticker}`);
-        
-        const chartData = await response.json();
-
-        const formattedSeries = chartData.series.map(candle => ({
-            x: new Date(candle.x),
-            y: candle.y // [Open, High, Low, Close]
-        }));
-
-        const options = {
-            series: [{
-                name: `${ticker} Price`,
-                data: formattedSeries
-            }],
-            chart: {
-                type: 'candlestick',
-                height: 380,
-                background: 'transparent',
-                toolbar: { show: true }
-            },
-            title: {
-                text: `${ticker} Daily Price Action (OHLC)`,
-                align: 'left',
-                style: { color: '#94a3b8', fontSize: '14px' }
-            },
-            xaxis: {
-                type: 'datetime',
-                labels: { style: { colors: '#94a3b8' } }
-            },
-            yaxis: {
-                tooltip: { enabled: true },
-                labels: { style: { colors: '#94a3b8' } }
-            },
-            grid: { borderColor: '#334155' }
-        };
-
-        const chartContainer = document.querySelector("#apex-chart");
-        if (!chartContainer) return;
-
-        if (apexChartInstance) {
-            apexChartInstance.updateOptions({
-                title: { text: `${ticker} Daily Price Action (OHLC)` }
-            });
-            apexChartInstance.updateSeries([{ name: `${ticker} Price`, data: formattedSeries }]);
+        if (response.ok) {
+            currentUser = data.user;
+            localStorage.setItem('ngx_user', JSON.stringify(currentUser));
+            updateAuthUI();
+            closeLoginModal();
+            showToast('Authentication Granted', `Welcome back, ${currentUser.name}`);
         } else {
-            apexChartInstance = new ApexCharts(chartContainer, options);
-            apexChartInstance.render();
+            showToast('Authentication Error', data.detail || 'Failed to authenticate');
         }
-        
-        currentTicker = ticker;
-    } catch (error) {
-        console.error(`Error rendering chart for ${ticker}:`, error);
+    } catch (err) {
+        // Fallback demo mode if backend server is not running
+        currentUser = {
+            name: email.split('@')[0].toUpperCase(),
+            email: email,
+            role: "Quantitative Analyst"
+        };
+        localStorage.setItem('ngx_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        closeLoginModal();
+        showToast('Offline Mode', `Authenticated locally as ${currentUser.name}`);
     }
 }
 
-// Helper to handle table row clicks
-function selectTicker(ticker) {
-    loadCandlestickChart(ticker);
-}
+async function handleSignup(event) {
+    event.preventDefault();
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
 
-// -------------------------------------------------------------------
-// 4. Initialize Event Listeners on Load
-// -------------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    // Initial loads
-    loadMetrics();
-    loadTickersTable();
-    loadCandlestickChart(currentTicker);
-
-    // Search bar event listener
-    const searchInput = document.getElementById("search-input");
-    if (searchInput) {
-        searchInput.addEventListener("input", (e) => {
-            loadTickersTable(e.target.value.trim());
-        });
-    }
-});
-
-// Helper function for authorized API calls
-async function fetchWithAuth(url, options = {}) {
-    const token = localStorage.getItem("jwt_access_token");
-    
-    const headers = {
-        "Content-Type": "application/json",
-        ...options.headers
-    };
-
-    if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url, { ...options, headers });
-
-    if (response.status === 401) {
-        console.warn("Unauthorized access. Redirecting to login...");
-        // Handle token expiration or unauthenticated state here
-    }
-
-    return response;
-}
-
-// Example Login Function
-async function loginUser(username, password) {
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
-
-    const response = await fetch("https://ainow-backend.onrender.com/api/v1/auth/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData
-    });
-
-    if (!response.ok) throw new Error("Login failed");
-
-    const data = await response.json();
-    localStorage.setItem("jwt_access_token", data.access_token);
-    console.log("Logged in successfully!");
-}
-
-// Refactored watchlist loader using fetchWithAuth
-async function loadTickersTable(searchQuery = "") {
     try {
-        const url = searchQuery 
-            ? `${API_BASE}/tickers?search=${encodeURIComponent(searchQuery)}`
-            : `${API_BASE}/tickers`;
-            
-        const response = await fetchWithAuth(url);
-        if (!response.ok) throw new Error("Tickers endpoint error");
+        const response = await fetch(`${API_BASE_URL}/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name: name, email, password })
+        });
+        const data = await response.json();
 
-        const tickers = await response.json();
-        // Render table logic...
-    } catch (error) {
-        console.error("Error loading watchlist:", error);
+        if (response.ok) {
+            currentUser = data.user;
+            localStorage.setItem('ngx_user', JSON.stringify(currentUser));
+            updateAuthUI();
+            closeSignupModal();
+            showToast('Account Created', `Institutional gateway unlocked for ${name}`);
+        } else {
+            showToast('Registration Error', data.detail || 'Sign up failed');
+        }
+    } catch (err) {
+        currentUser = { name, email, role: "Registered Quant Member" };
+        localStorage.setItem('ngx_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        closeSignupModal();
+        showToast('Account Created', `Registered locally as ${name}`);
     }
 }
 
-
-let socket = null;
-
-function connectWebSocket() {
-    // Convert HTTP URL to WS URL
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${wsProtocol}//${window.location.host}/ws/ticks`;
-
-    socket = new WebSocket(wsUrl);
-
-    socket.onopen = () => {
-        console.log("⚡ Connected to Live Market WebSocket stream.");
-        updateConnectionStatus(true);
-    };
-
-    socket.onmessage = (event) => {
-        const tick = JSON.parse(event.data);
-        console.log("📈 Real-time tick received:", tick);
-        
-        // Dynamically update UI
-        updateTickerBadge(tick);
-    };
-
-    socket.onclose = () => {
-        console.warn("⚠️ WebSocket disconnected. Retrying in 3 seconds...");
-        updateConnectionStatus(false);
-        setTimeout(connectWebSocket, 3000); // Reconnect automatically
-    };
-
-    socket.onerror = (error) => {
-        console.error("WebSocket Error:", error);
-        socket.close();
-    };
+function handleLogout() {
+    currentUser = null;
+    localStorage.removeItem('ngx_user');
+    updateAuthUI();
+    showToast('Signed Out', 'You have been disconnected from the gateway.');
 }
 
-function updateTickerBadge(tick) {
-    const tickerRow = document.getElementById(`ticker-${tick.ticker}`);
-    if (!tickerRow) return;
+// Modal Toggle Functions
+function openLoginModal() {
+    document.getElementById('login-modal')?.classList.remove('hidden');
+    document.getElementById('signup-modal')?.classList.add('hidden');
+}
+function closeLoginModal() { document.getElementById('login-modal')?.classList.add('hidden'); }
+function openSignupModal() {
+    document.getElementById('signup-modal')?.classList.remove('hidden');
+    document.getElementById('login-modal')?.classList.add('hidden');
+}
+function closeSignupModal() { document.getElementById('signup-modal')?.classList.add('hidden'); }
+function switchToSignup() { closeLoginModal(); openSignupModal(); }
+function switchToLogin() { closeSignupModal(); openLoginModal(); }
 
-    // Update Price with visual pulse indicator
-    const priceElem = tickerRow.querySelector(".ticker-price");
-    if (priceElem) {
-        priceElem.textContent = `₦${tick.price.toFixed(2)}`;
-        
-        // Flash green for gain, red for loss
-        const flashClass = tick.change >= 0 ? "bg-green-100" : "bg-red-100";
-        priceElem.classList.add(flashClass);
-        setTimeout(() => priceElem.classList.remove(flashClass), 1000);
+// ==========================================
+// API INSPECTOR & DATA FETCHING
+// ==========================================
+
+async function testEndpoint(method, endpoint) {
+    const titleEl = document.getElementById('inspector-endpoint-title');
+    const jsonEl = document.getElementById('inspector-json');
+    if (titleEl) titleEl.innerText = `${method} ${endpoint}`;
+
+    try {
+        let payload = {};
+        if (endpoint === '/signup') payload = { full_name: "Test Analyst", email: "test@firm.com", password: "password123" };
+        if (endpoint === '/login') payload = { email: "seun@firm.com", password: "password123" };
+        if (endpoint === '/predict') payload = { symbol: "MTNN" };
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: method === 'POST' ? JSON.stringify(payload) : null
+        });
+
+        const data = await response.json();
+        if (jsonEl) jsonEl.innerText = JSON.stringify(data, null, 2);
+        showToast('API Response', `Successfully invoked ${endpoint}`);
+    } catch (err) {
+        if (jsonEl) jsonEl.innerText = JSON.stringify({ error: "Backend server unreachable. Ensure main.py is running on port 8000." }, null, 2);
     }
 }
 
-function updateConnectionStatus(isConnected) {
-    const statusDot = document.getElementById("ws-status-dot");
-    if (statusDot) {
-        statusDot.className = isConnected 
-            ? "w-3 h-3 rounded-full bg-green-500 animate-pulse" 
-            : "w-3 h-3 rounded-full bg-red-500";
+async function fetchMarketSummary() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/market-summary`);
+        if (res.ok) {
+            const data = await res.json();
+            const statusEl = document.getElementById('api-status');
+            if (statusEl) statusEl.innerHTML = `● REST Gateway Online (${data.asi} ASI)`;
+        }
+    } catch (e) {
+        // Backend offline fallback UI
     }
 }
 
-// Initialize on page load
-document.addEventListener("DOMContentLoaded", () => {
-    connectWebSocket();
-});
+// ==========================================
+// CHARTS & NOTIFICATION TOASTS
+// ==========================================
+
+function initializeCharts() {
+    const candleEl = document.querySelector("#candlestick-chart");
+    if (candleEl) {
+        const candleOptions = {
+            series: [{
+                data: [
+                    { x: new Date('2026-07-18'), y: [233, 235, 228, 229] },
+                    { x: new Date('2026-07-19'), y: [229, 233, 228, 231] },
+                    { x: new Date('2026-07-20'), y: [231, 237, 230, 235] },
+                    { x: new Date('2026-07-21'), y: [235, 238, 232, 236] },
+                    { x: new Date('2026-07-22'), y: [236, 240, 234, 238] }
+                ]
+            }],
+            chart: { type: 'candlestick', height: 280, toolbar: { show: false }, background: 'transparent' },
+            theme: { mode: 'dark' }
+        };
+        new ApexCharts(candleEl, candleOptions).render();
+    }
+
+    const growthEl = document.querySelector("#portfolio-growth-chart");
+    if (growthEl) {
+        const growthOptions = {
+            series: [{ name: 'NAV (M)', data: [420, 435, 448, 465, 482.5] }],
+            chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent' },
+            colors: ['#10B981'],
+            theme: { mode: 'dark' }
+        };
+        new ApexCharts(growthEl, growthOptions).render();
+    }
+}
+
+function showToast(title, message) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'glass p-4 rounded-xl shadow-xl border border-gray-700 flex items-start space-x-3 pointer-events-auto toast-enter max-w-sm';
+    toast.innerHTML = `
+        <div class="text-ngx-accent mt-0.5"><i class="fas fa-info-circle text-lg"></i></div>
+        <div class="flex-1">
+            <h4 class="text-xs font-bold text-white">${title}</h4>
+            <p class="text-xs text-gray-300 mt-0.5">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xs"></i></button>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+function openApiInspector() { document.getElementById('api-inspector-modal')?.classList.remove('hidden'); }
+function closeApiInspector() { document.getElementById('api-inspector-modal')?.classList.add('hidden'); }
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    document.documentElement.classList.toggle('light');
+}

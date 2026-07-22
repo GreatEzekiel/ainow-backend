@@ -8,7 +8,7 @@ from sklearn.metrics import (
     confusion_matrix,
     classification_report,
 )
-from utils import setup_logger
+from backend.training.utils import setup_logger
 
 logger = setup_logger(__name__)
 

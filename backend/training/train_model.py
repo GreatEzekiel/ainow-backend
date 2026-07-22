@@ -2,10 +2,10 @@ import os
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
-from utils import setup_logger, load_raw_data, save_artifact
-from preprocess import clean_market_data
-from feature_engineering import generate_features
-from evaluate_model import evaluate_predictions
+from backend.training.utils import setup_logger, load_raw_data, save_artifact
+from backend.training.preprocess import clean_market_data
+from backend.training.feature_engineering import generate_features
+from backend.training.evaluate_model import evaluate_predictions
 
 logger = setup_logger("train_model")
 
