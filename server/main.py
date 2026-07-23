@@ -13,6 +13,11 @@ from fastapi.staticfiles import StaticFiles
 import os
 from fastapi.staticfiles import StaticFiles
 import os
+from datetime import datetime, timedelta, timezone
+import jwt
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
+
 
 #app = FastAPI(
 #    title="NGX Alpha Labs API Gateway",
@@ -229,3 +234,86 @@ async def execute_order(order: OrderRequest):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# --- Configuration ---
+SECRET_KEY = "YOUR_SUPER_SECRET_KEY_CHANGE_IN_PRODUCTION"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Initialize FastAPI App & Security Scheme
+app = FastAPI(title="Institutional Quant Gateway", version="1.0.0")
+security = HTTPBearer()
+
+# --- Schemas ---
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+# --- Security Helpers ---
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    """Generates a signed JWT token."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Extracts and verifies the Bearer token from the Authorization header."""
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+# --- Endpoints ---
+
+@app.get("/")
+def health_check():
+    """Root health check to prevent 404s on root hits."""
+    return {"status": "online", "docs": "/docs"}
+
+# Handlers for both /login and /api/login to match your gateway logs
+@app.post("/login", response_model=TokenResponse, tags=["Auth"])
+@app.post("/api/login", response_model=TokenResponse, tags=["Auth"])
+def login(payload: LoginRequest):
+    """Authenticate user and return JWT access token."""
+    # Simple hardcoded check for testing (replace with database authentication)
+    if payload.username == "admin" and payload.password == "secret123":
+        access_token = create_access_token(data={"sub": payload.username})
+        return {"access_token": access_token, "token_type": "bearer"}
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Incorrect username or password",
+    )
+
+@app.get("/api/v1/equities", tags=["Equities"])
+def get_equities(current_user: dict = Depends(verify_jwt_token)):
+    """Protected endpoint requiring Authorization: Bearer <token>."""
+    return {
+        "status": "success",
+        "user": current_user.get("sub"),
+        "data": [
+            {"symbol": "AAPL", "price": 185.20},
+            {"symbol": "MSFT", "price": 420.50},
+            {"symbol": "NVDA", "price": 120.30},
+        ]
+    }
