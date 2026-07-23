@@ -14,11 +14,24 @@ import os
 from fastapi.staticfiles import StaticFiles
 import os
 
-app = FastAPI(
-    title="NGX Alpha Labs API Gateway",
-    version="2.1.0",
-    description="Institutional API for NGX Equities, ML Vector Signals, and Execution"
-)
+#app = FastAPI(
+#    title="NGX Alpha Labs API Gateway",
+#    version="2.1.0",
+#    description="Institutional API for NGX Equities, ML Vector Signals, and Execution"
+#)
+
+app = FastAPI()
+
+try:
+    # Prefer local routers package if available
+    from routers.equities import router as equities_router  # type: ignore[import]
+except Exception:
+    # Fallback: create an empty router placeholder so app can start without the package
+    from fastapi import APIRouter
+    equities_router = APIRouter()
+
+# Make sure you include the router with the matching prefix
+app.include_router(equities_router, prefix="/api/v1")
 
 # ... [Your existing FastAPI routes (/api/login, /api/predict, etc.)] ...
 
@@ -192,6 +205,14 @@ async def get_market_summary():
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
 
+@app.get("/")
+def health_check():
+    return {
+        "status": "online",
+        "service": "NGX Alpha Labs API",
+        "docs": "/docs"
+    }
+
 @app.post("/api/order")
 async def execute_order(order: OrderRequest):
     return {
@@ -203,6 +224,7 @@ async def execute_order(order: OrderRequest):
         "status": "FILLED",
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
+
 
 if __name__ == "__main__":
     import uvicorn

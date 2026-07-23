@@ -62,9 +62,7 @@
     <!-- Interactive Toast Container -->
     <div id="toast-container" class="fixed top-24 right-8 z-50 flex flex-col space-y-3 pointer-events-none"></div>
 
-    <!-- ========================================== -->
     <!-- AUTH MODAL 1: USER LOGIN MODAL -->
-    <!-- ========================================== -->
     <div id="login-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
         <div class="glass w-full max-w-md rounded-2xl shadow-2xl p-6 border border-gray-700 relative">
             <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
@@ -109,9 +107,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- AUTH MODAL 2: USER SIGNUP MODAL -->
-    <!-- ========================================== -->
     <div id="signup-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
         <div class="glass w-full max-w-md rounded-2xl shadow-2xl p-6 border border-gray-700 relative">
             <button onclick="closeSignupModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
@@ -291,7 +287,7 @@
                     <i class="fas fa-briefcase text-lg"></i>
                     <span class="hidden lg:block ml-4 font-medium">Portfolio NAV</span>
                 </a>
-                <a href="#predictions-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
+                <a href="#portfolio-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
                     <i class="fas fa-brain text-lg"></i>
                     <span class="hidden lg:block ml-4 font-medium">Quant Predictions</span>
                 </a>
@@ -341,28 +337,36 @@
 
                 <!-- AUTHENTICATION STATE CONTAINER -->
                 <!-- State A: Unauthenticated Buttons -->
-                <div id="auth-guest-group" class="flex items-center space-x-2">
+                <div id="auth-guest-group" class="hidden flex items-center space-x-2">
                     <button onclick="openLoginModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white transition">Sign In</button>
                     <button onclick="openSignupModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-ngx-accent to-blue-600 text-white text-xs font-bold shadow-md hover:scale-105 transition">Register</button>
                 </div>
 
-                <!-- State B: Authenticated User Profile (Default Logged In) -->
-                <div id="auth-user-group" class="hidden items-center space-x-3 relative group">
-                    <div class="flex items-center space-x-3 cursor-pointer">
-                        <img id="header-avatar" src="https://ui-avatars.com/api/?name=Luky+Seun&background=10B981&color=fff" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-gray-600">
+                <!-- State B: Authenticated User Profile (Fixed Dropdown Hit Region & z-index) -->
+                <div id="auth-user-group" class="relative group py-2">
+                    <div class="flex items-center space-x-3 cursor-pointer select-none">
+                        <img id="header-avatar" src="https://ui-avatars.com/api/?name=Luky+Seun&background=10B981&color=fff" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-ngx-accent">
                         <div class="hidden md:block">
-                            <p class="text-sm font-semibold" id="header-user-name">Luky Seun</p>
+                            <p class="text-sm font-semibold leading-tight" id="header-user-name">Luky Seun</p>
                             <p class="text-xs text-gray-400" id="header-user-role">Senior Equity Strategist</p>
                         </div>
-                        <i class="fas fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 ml-1 group-hover:text-ngx-accent transition"></i>
                     </div>
 
-                    <!-- Dropdown Menu -->
-                    <div class="absolute right-0 top-12 w-48 glass rounded-xl shadow-xl border border-gray-800 py-2 hidden group-hover:block transition">
-                        <a href="#portfolio-section" class="block px-4 py-2 text-xs text-gray-300 hover:bg-gray-800">Portfolio NAV</a>
-                        <button onclick="openApiInspector()" class="w-full text-left px-4 py-2 text-xs text-gray-300 hover:bg-gray-800">API Gateway Console</button>
-                        <div class="border-t border-gray-800 my-1"></div>
-                        <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-red-950/30 font-semibold"><i class="fas fa-sign-out-alt mr-2"></i>Sign Out</button>
+                    <!-- Dropdown Menu Outer Wrapper with top-full & pt-2 for zero-gap hover target -->
+                    <div class="absolute right-0 top-full pt-2 w-52 z-50 hidden group-hover:block hover:block">
+                        <div class="glass rounded-xl shadow-2xl border border-gray-800 py-2 bg-gray-950/95 backdrop-blur-xl">
+                            <a href="#portfolio-section" class="flex items-center px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                                <i class="fas fa-briefcase w-5 text-gray-400"></i> Portfolio NAV
+                            </a>
+                            <button onclick="openApiInspector()" class="w-full flex items-center px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition text-left">
+                                <i class="fas fa-terminal w-5 text-gray-400"></i> API Console
+                            </button>
+                            <div class="border-t border-gray-800 my-1"></div>
+                            <button onclick="handleLogout()" class="w-full flex items-center px-4 py-2.5 text-xs text-red-400 hover:bg-red-950/30 hover:text-red-300 font-semibold transition text-left">
+                                <i class="fas fa-sign-out-alt w-5 text-red-400"></i> Sign Out
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -433,7 +437,7 @@
                                 <td class="p-3 text-gray-300">MTN Nigeria Communications Plc</td>
                                 <td class="p-3 text-right font-mono font-bold">₦235.00</td>
                                 <td class="p-3 text-right">
-                                    <button onclick="openTickerModal('MTNN','MTN Nigeria Plc','Telecommunications',230.5,235,238,229,'BULLISH ACCUMULATION','87.4%')" class="px-3 py-1 bg-gray-800 text-white rounded">Inspect</button>
+                                    <button onclick="openTickerModal('MTNN','MTN Nigeria Plc','Telecommunications',230.5,235,238,229,'BULLISH ACCUMULATION','87.4%')" class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-ngx-accent transition">Inspect</button>
                                 </td>
                             </tr>
                             <tr class="hover:bg-gray-800/30 transition">
@@ -441,7 +445,7 @@
                                 <td class="p-3 text-gray-300">Dangote Cement Plc</td>
                                 <td class="p-3 text-right font-mono font-bold">₦655.00</td>
                                 <td class="p-3 text-right">
-                                    <button onclick="openTickerModal('DANGCEM','Dangote Cement Plc','Industrial Goods',640,655,660,638,'STRONG BUY','92.1%')" class="px-3 py-1 bg-gray-800 text-white rounded">Inspect</button>
+                                    <button onclick="openTickerModal('DANGCEM','Dangote Cement Plc','Industrial Goods',640,655,660,638,'STRONG BUY','92.1%')" class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-ngx-accent transition">Inspect</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -471,15 +475,16 @@
 
             if (currentUser) {
                 guestGroup.classList.add('hidden');
+                guestGroup.classList.remove('flex');
                 userGroup.classList.remove('hidden');
-                userGroup.classList.add('flex');
+                userGroup.classList.add('relative');
                 if (nameDisplay) nameDisplay.innerText = currentUser.name;
                 if (roleDisplay) roleDisplay.innerText = currentUser.role || 'Quant Analyst';
                 if (avatarImg) avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10B981&color=fff`;
             } else {
                 guestGroup.classList.remove('hidden');
+                guestGroup.classList.add('flex');
                 userGroup.classList.add('hidden');
-                userGroup.classList.remove('flex');
             }
         }
 
@@ -514,14 +519,11 @@
         function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('login-email').value;
-            const name = email.split('@')[0].toUpperCase();
-            
             currentUser = {
-                name: name || "Institutional Trader",
+                name: email.split('@')[0].toUpperCase(),
                 email: email,
-                role: "Senior Quantitative Analyst"
+                role: "Institutional Trader"
             };
-            
             localStorage.setItem('ngx_user', JSON.stringify(currentUser));
             updateAuthUI();
             closeLoginModal();
@@ -532,40 +534,37 @@
             event.preventDefault();
             const name = document.getElementById('signup-name').value;
             const email = document.getElementById('signup-email').value;
-
             currentUser = {
                 name: name,
                 email: email,
-                role: "Registered Quant Member"
+                role: "Equity Strategist"
             };
-
             localStorage.setItem('ngx_user', JSON.stringify(currentUser));
             updateAuthUI();
             closeSignupModal();
-            showToast('Account Created', `Institutional gateway granted for ${name}`);
+            showToast('Account Created', `Institutional account registered for ${name}`);
         }
 
         function handleLogout() {
-            currentUser = null;
             localStorage.removeItem('ngx_user');
+            currentUser = null;
             updateAuthUI();
-            showToast('Logged Out', 'You have been safely signed out of the gateway.');
+            showToast('Signed Out', 'You have been logged out of the trading gateway.');
         }
 
         // -------------------------------------------------------------
-        // TOAST NOTIFICATION & OTHER MODALS
+        // TOAST NOTIFICATION SYSTEM
         // -------------------------------------------------------------
         function showToast(title, message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'glass p-4 rounded-xl shadow-xl border border-gray-700 flex items-start space-x-3 pointer-events-auto toast-enter max-w-sm';
+            toast.className = 'glass p-4 rounded-xl border border-gray-700 shadow-2xl flex items-start space-x-3 pointer-events-auto toast-enter w-80 text-xs bg-gray-900/95';
             toast.innerHTML = `
-                <div class="text-ngx-accent mt-0.5"><i class="fas fa-info-circle text-lg"></i></div>
+                <div class="p-2 bg-ngx-accent/20 text-ngx-accent rounded-lg shrink-0"><i class="fas fa-bell"></i></div>
                 <div class="flex-1">
-                    <h4 class="text-xs font-bold text-white">${title}</h4>
-                    <p class="text-xs text-gray-300 mt-0.5">${message}</p>
+                    <h4 class="font-bold text-white mb-0.5">${title}</h4>
+                    <p class="text-gray-400">${message}</p>
                 </div>
-                <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xs"></i></button>
             `;
             container.appendChild(toast);
             setTimeout(() => {
@@ -575,54 +574,117 @@
             }, 3500);
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            html.classList.toggle('dark');
-            html.classList.toggle('light');
+        // -------------------------------------------------------------
+        // API INSPECTOR MODAL HANDLERS
+        // -------------------------------------------------------------
+        function openApiInspector() {
+            document.getElementById('api-inspector-modal').classList.remove('hidden');
         }
 
-        function openApiInspector() { document.getElementById('api-inspector-modal').classList.remove('hidden'); }
-        function closeApiInspector() { document.getElementById('api-inspector-modal').classList.add('hidden'); }
+        function closeApiInspector() {
+            document.getElementById('api-inspector-modal').classList.add('hidden');
+        }
+
         function testEndpoint(method, endpoint) {
             document.getElementById('inspector-endpoint-title').innerText = `${method} ${endpoint}`;
-            showToast('API Called', `Executed ${endpoint}`);
+            const targetEl = document.getElementById('inspector-json');
+            targetEl.innerText = 'Executing call...';
+            
+            setTimeout(() => {
+                const samplePayloads = {
+                    '/signup': { status: 201, message: "User account created successfully", token: "eyJhbGciOiJIUzI1Ni..." },
+                    '/login': { status: 200, access_token: "eyJhbGciOiJIUzI1Ni...", token_type: "bearer" },
+                    '/predict': { symbol: "MTNN", prediction: "BULLISH", confidence: 0.874, target_price: 248.50 }
+                };
+                targetEl.innerText = JSON.stringify(samplePayloads[endpoint] || { status: 200, response: "OK" }, null, 2);
+            }, 400);
         }
 
-        function openTickerModal(symbol, company, sector, open, close, high, low, targetText, conf) {
+        function copyInspectorOutput() {
+            const content = document.getElementById('inspector-json').innerText;
+            navigator.clipboard.writeText(content);
+            showToast('Copied', 'JSON output copied to clipboard.');
+        }
+
+        // -------------------------------------------------------------
+        // TICKER MODAL & ORDER EXECUTION
+        // -------------------------------------------------------------
+        function openTickerModal(symbol, company, sector, open, close, high, low, target, confidence) {
             document.getElementById('modal-ticker-symbol').innerText = symbol;
             document.getElementById('modal-ticker-company').innerText = company;
+            document.getElementById('modal-ticker-sector').innerText = sector;
+            document.getElementById('modal-open').innerText = `₦${open.toFixed(2)}`;
+            document.getElementById('modal-close').innerText = `₦${close.toFixed(2)}`;
+            document.getElementById('modal-high').innerText = `₦${high.toFixed(2)}`;
+            document.getElementById('modal-low').innerText = `₦${low.toFixed(2)}`;
+            document.getElementById('modal-target-badge').innerText = target;
+            document.getElementById('modal-confidence-text').innerText = confidence;
             document.getElementById('ticker-modal').classList.remove('hidden');
         }
-        function closeTickerModal() { document.getElementById('ticker-modal').classList.add('hidden'); }
-        function executeOrder(type) {
-            showToast('Order Sent', `${type} order dispatched`);
-            closeTickerModal();
+
+        function closeTickerModal() {
+            document.getElementById('ticker-modal').classList.add('hidden');
         }
 
-        // ApexCharts Initializer
+        function executeOrder(type) {
+            const symbol = document.getElementById('modal-ticker-symbol').innerText;
+            closeTickerModal();
+            showToast('Order Transmitted', `${type} order executed for ${symbol} via NGX DMA Router.`);
+        }
+
+        // -------------------------------------------------------------
+        // THEME TOGGLE & TABLE SEARCH
+        // -------------------------------------------------------------
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function searchTable() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#equity-matrix-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // -------------------------------------------------------------
+        // APEXCHARTS INITIALIZATION
+        // -------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', () => {
             updateAuthUI();
 
+            // Candlestick Chart Options
             const candleOptions = {
+                chart: { type: 'candlestick', height: 320, toolbar: { show: false }, background: 'transparent' },
+                theme: { mode: 'dark' },
                 series: [{
                     data: [
-                        { x: new Date('2026-07-18'), y: [233, 235, 228, 229] },
-                        { x: new Date('2026-07-19'), y: [229, 233, 228, 231] },
-                        { x: new Date('2026-07-20'), y: [231, 237, 230, 235] }
+                        { x: '09:30', y: [230.5, 233.0, 229.0, 231.5] },
+                        { x: '10:30', y: [231.5, 235.0, 230.0, 234.0] },
+                        { x: '11:30', y: [234.0, 236.5, 232.0, 233.5] },
+                        { x: '12:30', y: [233.5, 238.0, 233.0, 237.0] },
+                        { x: '13:30', y: [237.0, 237.5, 234.0, 235.0] }
                     ]
                 }],
-                chart: { type: 'candlestick', height: 280, toolbar: { show: false }, background: 'transparent' },
-                theme: { mode: 'dark' }
+                xaxis: { labels: { style: { colors: '#9CA3AF' } } },
+                yaxis: { labels: { style: { colors: '#9CA3AF' } } },
+                grid: { borderColor: '#1F2937' }
             };
             new ApexCharts(document.querySelector("#candlestick-chart"), candleOptions).render();
 
-            const growthOptions = {
-                series: [{ name: 'NAV', data: [420, 445, 482.5] }],
-                chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent' },
+            // Portfolio Growth Chart Options
+            const areaOptions = {
+                chart: { type: 'area', height: 320, toolbar: { show: false }, background: 'transparent' },
+                theme: { mode: 'dark' },
+                stroke: { curve: 'smooth', width: 2 },
                 colors: ['#10B981'],
-                theme: { mode: 'dark' }
+                series: [{ name: 'NAV (Millions)', data: [420, 435, 430, 455, 470, 482.5] }],
+                xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], labels: { style: { colors: '#9CA3AF' } } },
+                yaxis: { labels: { style: { colors: '#9CA3AF' } } },
+                grid: { borderColor: '#1F2937' }
             };
-            new ApexCharts(document.querySelector("#portfolio-growth-chart"), growthOptions).render();
+            new ApexCharts(document.querySelector("#portfolio-growth-chart"), areaOptions).render();
         });
     </script>
 </body>
