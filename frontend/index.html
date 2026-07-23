@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NGX ALPHA LABS - INSTITUTIONAL EQUITY ANALYTICS & QUANT ENGINE</title>
+    <title>EQUITY PRICE MOVEMENT PREDICTION</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        ngx: { dark: '#0B1120', card: '#111827', accent: '#10B981' }
+                        ngx: { dark: '#0B1120', card: '#111827', accent: '#10B981', danger: '#EF4444' }
                     }
                 }
             }
@@ -29,16 +29,11 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
     <style>
-        /* Glassmorphism Utilities */
         .glass {
-            background: rgba(17, 24, 39, 0.75);
+            background: rgba(17, 24, 39, 0.80);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .light .glass {
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid rgba(0, 0, 0, 0.08);
         }
         html { scroll-behavior: smooth; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -59,166 +54,13 @@
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-ngx-dark dark:text-gray-100 font-sans antialiased transition-colors duration-300 flex h-screen overflow-hidden">
 
-    <!-- Interactive Toast Container -->
+    <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed top-24 right-8 z-50 flex flex-col space-y-3 pointer-events-none"></div>
 
-    <!-- AUTH MODAL 1: USER LOGIN MODAL -->
-    <div id="login-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass w-full max-w-md rounded-2xl shadow-2xl p-6 border border-gray-700 relative">
-            <button onclick="closeLoginModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
-            
-            <div class="text-center space-y-2 mb-6">
-                <div class="w-12 h-12 mx-auto bg-ngx-accent/20 text-ngx-accent rounded-xl flex items-center justify-center text-xl">
-                    <i class="fas fa-sign-in-alt"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white">Sign In to NGX Alpha Labs</h3>
-                <p class="text-xs text-gray-400">Access your institutional trading desk & ML signals</p>
-            </div>
-
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Email Address</label>
-                    <div class="relative">
-                        <i class="fas fa-envelope absolute left-3.5 top-3 text-gray-500 text-xs"></i>
-                        <input type="email" id="login-email" required placeholder="analyst@firm.com" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-gray-100 focus:outline-none focus:border-ngx-accent transition">
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider">Password</label>
-                        <a href="#" onclick="showToast('Password Reset', 'Password recovery link dispatched to your email.')" class="text-[11px] text-ngx-accent hover:underline">Forgot?</a>
-                    </div>
-                    <div class="relative">
-                        <i class="fas fa-lock absolute left-3.5 top-3 text-gray-500 text-xs"></i>
-                        <input type="password" id="login-password" required placeholder="••••••••••••" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-gray-100 focus:outline-none focus:border-ngx-accent transition">
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full py-3 rounded-xl bg-ngx-accent hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-900/40 transition flex items-center justify-center">
-                    <i class="fas fa-key mr-2"></i>Authenticate Gateway
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-xs text-gray-400">
-                Don't have an institutional account? 
-                <button onclick="switchToSignup()" class="text-ngx-accent font-bold hover:underline ml-1">Create Account</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- AUTH MODAL 2: USER SIGNUP MODAL -->
-    <div id="signup-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass w-full max-w-md rounded-2xl shadow-2xl p-6 border border-gray-700 relative">
-            <button onclick="closeSignupModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
-            
-            <div class="text-center space-y-2 mb-6">
-                <div class="w-12 h-12 mx-auto bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center text-xl">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white">Register Institutional Account</h3>
-                <p class="text-xs text-gray-400">Join top quantitative traders & equity analysts</p>
-            </div>
-
-            <form onsubmit="handleSignup(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Full Name</label>
-                    <div class="relative">
-                        <i class="fas fa-user absolute left-3.5 top-3 text-gray-500 text-xs"></i>
-                        <input type="text" id="signup-name" required placeholder="Luky Seun" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-gray-100 focus:outline-none focus:border-ngx-accent transition">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Work Email</label>
-                    <div class="relative">
-                        <i class="fas fa-envelope absolute left-3.5 top-3 text-gray-500 text-xs"></i>
-                        <input type="email" id="signup-email" required placeholder="trader@firm.com" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-gray-100 focus:outline-none focus:border-ngx-accent transition">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">Password</label>
-                    <div class="relative">
-                        <i class="fas fa-lock absolute left-3.5 top-3 text-gray-500 text-xs"></i>
-                        <input type="password" id="signup-password" required placeholder="At least 8 characters" class="w-full bg-gray-900/80 border border-gray-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-gray-100 focus:outline-none focus:border-ngx-accent transition">
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-2 text-xs">
-                    <input type="checkbox" required class="mt-0.5 rounded bg-gray-900 border-gray-700 text-ngx-accent focus:ring-0">
-                    <label class="text-gray-400">I accept the <a href="#" class="text-ngx-accent hover:underline">Institutional Terms</a></label>
-                </div>
-
-                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-ngx-accent to-blue-600 text-white font-bold text-xs shadow-lg shadow-emerald-900/40 transition flex items-center justify-center">
-                    <i class="fas fa-check-circle mr-2"></i>Create Account
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-xs text-gray-400">
-                Already registered? 
-                <button onclick="switchToLogin()" class="text-ngx-accent font-bold hover:underline ml-1">Sign In</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- API Inspector Modal -->
-    <div id="api-inspector-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-gray-700 flex flex-col max-h-[85vh]">
-            <div class="p-5 border-b border-gray-800 flex items-center justify-between bg-gray-900/60">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-blue-500/20 text-blue-400 rounded-lg"><i class="fas fa-terminal"></i></div>
-                    <div>
-                        <h3 class="font-bold text-lg text-white">Institutional Quant Gateway Inspector</h3>
-                        <p class="text-xs text-gray-400">Directly execute endpoint calls & inspect real-time JSON responses</p>
-                    </div>
-                </div>
-                <button onclick="closeApiInspector()" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div class="lg:col-span-5 space-y-2">
-                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-2">Available API Endpoints</label>
-                    <button onclick="testEndpoint('POST', '/signup')" class="w-full text-left p-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-700/60 flex items-center justify-between group transition">
-                        <div>
-                            <span class="px-2 py-0.5 text-[10px] bg-blue-900/60 text-blue-300 rounded font-mono font-bold mr-2">POST</span>
-                            <span class="text-xs font-mono font-medium text-gray-200">/api/signup</span>
-                        </div>
-                        <i class="fas fa-play text-xs text-gray-500 group-hover:text-ngx-accent transition"></i>
-                    </button>
-                    <button onclick="testEndpoint('POST', '/login')" class="w-full text-left p-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-700/60 flex items-center justify-between group transition">
-                        <div>
-                            <span class="px-2 py-0.5 text-[10px] bg-blue-900/60 text-blue-300 rounded font-mono font-bold mr-2">POST</span>
-                            <span class="text-xs font-mono font-medium text-gray-200">/api/login</span>
-                        </div>
-                        <i class="fas fa-play text-xs text-gray-500 group-hover:text-ngx-accent transition"></i>
-                    </button>
-                    <button onclick="testEndpoint('POST', '/predict')" class="w-full text-left p-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-700/60 flex items-center justify-between group transition">
-                        <div>
-                            <span class="px-2 py-0.5 text-[10px] bg-blue-900/60 text-blue-300 rounded font-mono font-bold mr-2">POST</span>
-                            <span class="text-xs font-mono font-medium text-gray-200">/api/predict</span>
-                        </div>
-                        <i class="fas fa-play text-xs text-gray-500 group-hover:text-ngx-accent transition"></i>
-                    </button>
-                </div>
-
-                <div class="lg:col-span-7 flex flex-col">
-                    <div class="flex items-center justify-between mb-2">
-                        <span id="inspector-endpoint-title" class="text-xs font-mono text-ngx-accent">Select an endpoint to trigger call</span>
-                        <button onclick="copyInspectorOutput()" class="text-xs text-gray-400 hover:text-white"><i class="fas fa-copy mr-1"></i>Copy Output</button>
-                    </div>
-                    <pre id="inspector-json" class="flex-1 p-4 rounded-xl bg-gray-950 border border-gray-800 font-mono text-xs text-emerald-400 overflow-x-auto min-h-[220px] max-h-[320px]">
-{
-  "message": "Click any endpoint on the left to test live response payload."
-}</pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ticker Modal -->
-    <div id="ticker-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+    <!-- Ticker Inspection & Live Prediction Modal -->
+    <div id="ticker-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
         <div class="glass w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
-            <div class="p-6 border-b border-gray-800 flex justify-between items-start bg-gray-900/50">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-start bg-gray-900/60">
                 <div>
                     <div class="flex items-center space-x-3">
                         <h3 id="modal-ticker-symbol" class="text-2xl font-bold text-white">MTNN</h3>
@@ -228,43 +70,60 @@
                 </div>
                 <button onclick="closeTickerModal()" class="p-2 text-gray-400 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
             </div>
+            
             <div class="p-6 space-y-6">
+                <!-- Variables Display -->
                 <div class="grid grid-cols-4 gap-3 text-center">
-                    <div class="p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                        <span class="text-[10px] text-gray-400 block font-mono">OPEN PRICE</span>
-                        <span id="modal-open" class="text-sm font-bold font-mono text-gray-200">₦230.50</span>
+                    <div class="p-3 bg-gray-900/80 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-400 block font-mono">OPEN</span>
+                        <span id="modal-open" class="text-sm font-bold font-mono text-gray-200">₦0.00</span>
                     </div>
-                    <div class="p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                        <span class="text-[10px] text-gray-400 block font-mono">CLOSE PRICE</span>
-                        <span id="modal-close" class="text-sm font-bold font-mono text-ngx-accent">₦235.00</span>
+                    <div class="p-3 bg-gray-900/80 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-400 block font-mono">CLOSE</span>
+                        <span id="modal-close" class="text-sm font-bold font-mono text-ngx-accent">₦0.00</span>
                     </div>
-                    <div class="p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                        <span class="text-[10px] text-gray-400 block font-mono">DAY HIGH</span>
-                        <span id="modal-high" class="text-sm font-bold font-mono text-emerald-400">₦238.00</span>
+                    <div class="p-3 bg-gray-900/80 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-400 block font-mono">RSI (14)</span>
+                        <span id="modal-rsi" class="text-sm font-bold font-mono text-blue-400">0.0</span>
                     </div>
-                    <div class="p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                        <span class="text-[10px] text-gray-400 block font-mono">DAY LOW</span>
-                        <span id="modal-low" class="text-sm font-bold font-mono text-red-400">₦229.00</span>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-gray-800/30 rounded-xl border border-gray-700/50 flex items-center justify-between">
-                    <div>
-                        <span class="text-xs text-gray-400 block">ML Signal Sentiment</span>
-                        <span id="modal-target-badge" class="mt-1 inline-block px-3 py-1 rounded text-xs font-bold bg-emerald-900/40 text-ngx-accent">BULLISH ACCUMULATION</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs text-gray-400 block">Model Probability</span>
-                        <span id="modal-confidence-text" class="text-lg font-bold text-ngx-accent">87.4%</span>
+                    <div class="p-3 bg-gray-900/80 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-400 block font-mono">SMA 20</span>
+                        <span id="modal-sma20" class="text-sm font-bold font-mono text-purple-400">₦0.00</span>
                     </div>
                 </div>
 
+                <!-- Backend Prediction Output Box -->
+                <div class="p-5 bg-gradient-to-r from-gray-900 via-gray-900/90 to-gray-900 rounded-xl border border-gray-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-gray-400 uppercase tracking-wider block font-semibold">Signal</span>
+                            <span id="modal-signal-badge" class="mt-1 inline-block px-3 py-1 rounded text-xs font-bold bg-emerald-900/40 text-ngx-accent border border-emerald-700/50">
+                                AWAITING INFERENCE...
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-400 block font-semibold">Model Confidence</span>
+                            <span id="modal-confidence-text" class="text-2xl font-extrabold text-ngx-accent">--%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                        <div id="modal-confidence-bar" class="bg-ngx-accent h-2 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+
+                    <div class="flex justify-between text-xs text-gray-400 pt-1 font-mono">
+                        <span>Target Projection: <strong id="modal-target-price" class="text-white">₦--</strong></span>
+                        <span>Source: <strong id="modal-model-source" class="text-blue-400">Engine</strong></span>
+                    </div>
+                </div>
+
+                <!-- Live Prediction Action Trigger -->
                 <div class="flex space-x-3">
-                    <button onclick="executeOrder('BUY')" class="flex-1 py-3 bg-ngx-accent hover:bg-emerald-600 text-white font-bold rounded-xl transition text-sm">
-                        <i class="fas fa-plus-circle mr-2"></i>Execute Buy Order
+                    <button onclick="executeModalPrediction()" class="flex-1 py-3.5 bg-gradient-to-r from-ngx-accent to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/30 transition text-sm flex items-center justify-center">
+                        <i class="fas fa-brain mr-2"></i>Inference
                     </button>
-                    <button onclick="executeOrder('SELL')" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition text-sm">
-                        <i class="fas fa-minus-circle mr-2"></i>Execute Sell Order
+                    <button onclick="closeTickerModal()" class="px-5 py-3.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-xl transition text-sm">
+                        Close
                     </button>
                 </div>
             </div>
@@ -272,298 +131,245 @@
     </div>
 
     <!-- Sidebar Navigation -->
-    <aside class="w-20 lg:w-64 glass flex flex-col justify-between transition-all duration-300 z-20 shrink-0">
+    <aside class="w-20 lg:w-64 glass flex flex-col justify-between transition-all duration-300 z-20 shrink-0 border-r border-gray-800">
         <div>
-            <a href="#overview-section" class="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-200 dark:border-gray-800 group">
-                <i class="fas fa-chart-line text-ngx-accent text-2xl group-hover:scale-110 transition"></i>
+            <div class="h-20 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-800">
+                <i class="fas fa-chart-line text-ngx-accent text-2xl"></i>
                 <span class="hidden lg:block ml-3 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ngx-accent to-blue-500">NGX Alpha Labs</span>
-            </a>
+            </div>
             <nav class="mt-6 flex flex-col space-y-2 px-3">
-                <a href="#overview-section" class="flex items-center px-3 py-3 bg-gray-200 dark:bg-gray-800 rounded-xl text-blue-600 dark:text-blue-400 group transition">
-                    <i class="fas fa-tachometer-alt text-lg"></i>
-                    <span class="hidden lg:block ml-4 font-medium">Market Overview</span>
+                <a href="#quant-desk" class="flex items-center px-3 py-3 bg-gray-800/80 rounded-xl text-ngx-accent font-semibold group transition">
+                    <i class="fas fa-brain text-lg w-6 text-center"></i>
+                    <span class="hidden lg:block ml-3">Quant Engine</span>
                 </a>
-                <a href="#portfolio-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
-                    <i class="fas fa-briefcase text-lg"></i>
-                    <span class="hidden lg:block ml-4 font-medium">Portfolio NAV</span>
+                <a href="#matrix-section" class="flex items-center px-3 py-3 hover:bg-gray-800/50 rounded-xl text-gray-400 hover:text-white group transition">
+                    <i class="fas fa-table text-lg w-6 text-center"></i>
+                    <span class="hidden lg:block ml-3">Equity Matrix</span>
                 </a>
-                <a href="#portfolio-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
-                    <i class="fas fa-brain text-lg"></i>
-                    <span class="hidden lg:block ml-4 font-medium">Quant Predictions</span>
-                </a>
-                <a href="#matrix-section" class="flex items-center px-3 py-3 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400 group transition">
-                    <i class="fas fa-table text-lg"></i>
-                    <span class="hidden lg:block ml-4 font-medium">Equity Matrix</span>
+                <a href="#charts-section" class="flex items-center px-3 py-3 hover:bg-gray-800/50 rounded-xl text-gray-400 hover:text-white group transition">
+                    <i class="fas fa-chart-area text-lg w-6 text-center"></i>
+                    <span class="hidden lg:block ml-3">Charts & Analytics</span>
                 </a>
             </nav>
         </div>
 
-        <div class="p-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
-            <button onclick="openApiInspector()" class="w-full hidden lg:block p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-left hover:border-blue-500 transition group">
-                <div class="flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 font-semibold mb-1">
-                    <span><i class="fas fa-network-wired mr-1.5"></i> Gateway Status</span>
-                    <i class="fas fa-external-link-alt text-[10px] group-hover:translate-x-0.5 transition"></i>
-                </div>
-                <p id="api-status" class="text-[11px] text-emerald-500 font-mono truncate">● REST & WS Active</p>
-            </button>
-
-            <button id="theme-toggle" onclick="toggleTheme()" class="w-full flex items-center justify-center lg:justify-start px-3 py-2.5 bg-gray-200 dark:bg-gray-800 rounded-xl transition hover:bg-gray-300 dark:hover:bg-gray-700">
-                <i class="fas fa-moon dark:hidden text-gray-600"></i>
-                <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
-                <span class="hidden lg:block ml-3 font-medium text-sm">Toggle Theme</span>
-            </button>
+        <div class="p-4 border-t border-gray-800 space-y-3">
+            <div class="hidden lg:block p-3 rounded-xl bg-blue-950/30 border border-blue-900/50 text-xs">
+                <span class="text-blue-400 font-bold block mb-1"><i class="fas fa-server mr-1"></i> Target</span>
+                <span class="text-ngx-accent font-mono">http://127.0.0.1:8000</span>
+            </div>
         </div>
     </aside>
 
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col relative overflow-hidden">
         
-        <!-- Top Header -->
-        <header class="h-20 glass flex items-center justify-between px-8 z-10 shrink-0 border-b border-gray-200 dark:border-gray-800">
-            <div class="flex items-center w-1/3">
-                <div class="relative w-full max-w-md">
-                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
-                    <input id="search-input" onkeyup="searchTable()" type="text" placeholder="Search symbol or ticker..." class="w-full bg-gray-100 dark:bg-gray-800/60 border border-gray-300 dark:border-gray-700 rounded-full py-2.5 pl-12 pr-4 focus:outline-none focus:border-blue-500 transition shadow-sm text-sm">
-                </div>
+        <!-- Header Ribbon -->
+        <header class="h-20 glass flex items-center justify-between px-8 z-10 shrink-0 border-b border-gray-800">
+            <div class="flex items-center space-x-3">
+                <span class="px-3 py-1 bg-ngx-accent/20 text-ngx-accent text-xs font-bold rounded-full border border-ngx-accent/30 font-mono">
+                    LIVE ML DESK ACTIVE
+                </span>
             </div>
             
             <div class="flex items-center space-x-6">
-                <!-- Market Ribbon -->
-                <div class="hidden lg:flex items-center space-x-4 px-4 py-1.5 bg-gray-200/50 dark:bg-gray-800/50 rounded-full text-xs font-mono border border-gray-300 dark:border-gray-700">
-                    <div><span class="text-gray-400">NGX ASI:</span> <strong class="text-emerald-400">104,210.45</strong></div>
-                    <span class="text-gray-600">|</span>
+                <div class="hidden md:flex items-center space-x-4 px-4 py-1.5 bg-gray-900/80 rounded-full text-xs font-mono border border-gray-800">
+                    <div><span class="text-gray-400">NGX ASI:</span> <strong class="text-ngx-accent">104,210.45</strong></div>
+                    <span class="text-gray-700">|</span>
                     <div><span class="text-gray-400">TURNOVER:</span> <span>₦14.25B</span></div>
                 </div>
-
-                <!-- AUTHENTICATION STATE CONTAINER -->
-                <!-- State A: Unauthenticated Buttons -->
-                <div id="auth-guest-group" class="hidden flex items-center space-x-2">
-                    <button onclick="openLoginModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white transition">Sign In</button>
-                    <button onclick="openSignupModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-ngx-accent to-blue-600 text-white text-xs font-bold shadow-md hover:scale-105 transition">Register</button>
-                </div>
-
-                <!-- State B: Authenticated User Profile (Fixed Dropdown Hit Region & z-index) -->
-                <div id="auth-user-group" class="relative group py-2">
-                    <div class="flex items-center space-x-3 cursor-pointer select-none">
-                        <img id="header-avatar" src="https://ui-avatars.com/api/?name=Luky+Seun&background=10B981&color=fff" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-ngx-accent">
-                        <div class="hidden md:block">
-                            <p class="text-sm font-semibold leading-tight" id="header-user-name">Luky Seun</p>
-                            <p class="text-xs text-gray-400" id="header-user-role">Senior Equity Strategist</p>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs text-gray-400 ml-1 group-hover:text-ngx-accent transition"></i>
-                    </div>
-
-                    <!-- Dropdown Menu Outer Wrapper with top-full & pt-2 for zero-gap hover target -->
-                    <div class="absolute right-0 top-full pt-2 w-52 z-50 hidden group-hover:block hover:block">
-                        <div class="glass rounded-xl shadow-2xl border border-gray-800 py-2 bg-gray-950/95 backdrop-blur-xl">
-                            <a href="#portfolio-section" class="flex items-center px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition">
-                                <i class="fas fa-briefcase w-5 text-gray-400"></i> Portfolio NAV
-                            </a>
-                            <!-- <button onclick="openApiInspector()" class="w-full flex items-center px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 hover:text-white transition text-left">
-                                <i class="fas fa-terminal w-5 text-gray-400"></i> API Console
-                            </button> -->
-                            <div class="border-t border-gray-800 my-1"></div>
-                            <button onclick="handleLogout()" class="w-full flex items-center px-4 py-2.5 text-xs text-red-400 hover:bg-red-950/30 hover:text-red-300 font-semibold transition text-left">
-                                <i class="fas fa-sign-out-alt w-5 text-red-400"></i> Sign Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </header>
 
-        <!-- Scrollable Dashboard Content -->
+        <!-- Dashboard Body -->
         <div class="flex-1 overflow-y-auto p-8 space-y-8">
-            <div id="overview-section" class="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-                <div>
-                    <h1 class="text-3xl font-bold">Institutional Trading Desk</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Real-time Nigerian Exchange Group (NGX) price action & ML signals.</p>
+
+            <!-- QUANT PREDICTION ENGINE CONTROL PANEL -->
+            <section id="quant-desk" class="glass p-6 rounded-2xl border border-ngx-accent/30 shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-ngx-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b border-gray-800">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-microchip text-ngx-accent text-xl"></i>
+                            <h2 class="text-2xl font-extrabold text-white">Prediction</h2>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">
+                            Pedict and win 
+                    </div>
                 </div>
-            </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Features Form Input Controls -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">Select Ticker</label>
+                                <select id="input-ticker" onchange="loadSelectedTickerData()" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-ngx-accent font-bold">
+                                    <option value="MTNN">MTNN (MTN Nigeria)</option>
+                                    <option value="DANGCEM">DANGCEM (Dangote Cem)</option>
+                                    <option value="GTCO">GTCO (GTBank)</option>
+                                    <option value="ZENITHBANK">ZENITHBANK (Zenith)</option>
+                                    <option value="SEPLAT">SEPLAT (Seplat Energy)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">Open Price (₦)</label>
+                                <input type="number" step="0.01" id="input-open" value="230.50" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white font-mono focus:outline-none focus:border-ngx-accent">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">Close Price (₦)</label>
+                                <input type="number" step="0.01" id="input-close" value="235.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white font-mono focus:outline-none focus:border-ngx-accent">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">RSI (14)</label>
+                                <input type="number" step="0.1" id="input-rsi" value="58.4" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white font-mono focus:outline-none focus:border-ngx-accent">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">SMA 10 (₦)</label>
+                                <input type="number" step="0.01" id="input-sma10" value="231.20" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white font-mono focus:outline-none focus:border-ngx-accent">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-1">SMA 20 (₦)</label>
+                                <input type="number" step="0.01" id="input-sma20" value="228.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2.5 px-3 text-xs text-white font-mono focus:outline-none focus:border-ngx-accent">
+                            </div>
+                        </div>
+
+                        <!-- BACKEND PREDICTION ACTION BUTTON -->
+                        <button id="btn-run-predict" onclick="runQuantPrediction()" class="w-full py-4 rounded-xl bg-gradient-to-r from-ngx-accent via-emerald-500 to-blue-600 hover:opacity-95 text-white font-extrabold text-sm shadow-xl shadow-emerald-900/40 transition-all transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fas fa-bolt text-yellow-300 text-lg"></i>
+                            <span>EXECUTE PREDICTION</span>
+                        </button>
+                    </div>
+
+                    <!-- Live Backend Output Panel -->
+                    <div class="lg:col-span-5 bg-gray-950/80 rounded-xl border border-gray-800 p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs font-mono text-gray-400 uppercase">Live Output Payload</span>
+                                <span id="predict-status-tag" class="px-2 py-0.5 text-[10px] bg-gray-800 text-gray-400 rounded font-mono">READY</span>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-[11px] text-gray-400 block font-medium">Direction Signal</span>
+                                    <h3 id="output-signal" class="text-xl font-black text-ngx-accent mt-0.5">BULLISH ACCUMULATION</h3>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                                    <div class="p-2.5 bg-gray-900/80 rounded-lg border border-gray-800">
+                                        <span class="text-gray-400 block text-[10px]">CONFIDENCE</span>
+                                        <span id="output-confidence" class="text-base font-bold text-white">87.4%</span>
+                                    </div>
+                                    <div class="p-2.5 bg-gray-900/80 rounded-lg border border-gray-800">
+                                        <span class="text-gray-400 block text-[10px]">TARGET PRICE</span>
+                                        <span id="output-target" class="text-base font-bold text-ngx-accent">₦240.88</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-[11px] font-mono text-gray-400">
+                            <span>Engine: <span id="output-source" class="text-blue-400">RandomForest</span></span>
+                            <span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i>200 OK</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- KPI Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="glass p-5 rounded-2xl shadow-sm">
+                <div class="glass p-5 rounded-2xl">
                     <p class="text-xs text-gray-400 font-medium uppercase">NGX All-Share Index</p>
                     <h3 class="text-2xl font-bold mt-1 text-ngx-accent">104,210.45</h3>
                     <p class="mt-2 text-xs text-ngx-accent font-semibold">+0.84% Intraday</p>
                 </div>
-                <div class="glass p-5 rounded-2xl shadow-sm">
+                <div class="glass p-5 rounded-2xl">
                     <p class="text-xs text-gray-400 font-medium uppercase">Total Market Cap</p>
                     <h3 class="text-2xl font-bold mt-1">₦58.92 Trillion</h3>
                     <p class="mt-2 text-xs text-gray-400">NGX Aggregate Valuation</p>
                 </div>
-                <div class="glass p-5 rounded-2xl shadow-sm">
+                <div class="glass p-5 rounded-2xl">
                     <p class="text-xs text-gray-400 font-medium uppercase">Portfolio NAV</p>
                     <h3 class="text-2xl font-bold mt-1">₦482.50 Million</h3>
                     <p class="mt-2 text-xs text-ngx-accent font-semibold">+₦11.20M P&L</p>
                 </div>
-                <div class="glass p-5 rounded-2xl shadow-sm">
-                    <p class="text-xs text-gray-400 font-medium uppercase">Session Turnover</p>
-                    <h3 class="text-2xl font-bold mt-1">₦14.25 Billion</h3>
-                    <p class="mt-2 text-xs text-ngx-accent font-semibold">485.2M Shares Executed</p>
+                <div class="glass p-5 rounded-2xl">
+                    <p class="text-xs text-gray-400 font-medium uppercase">Active Model Accuracy</p>
+                    <h3 class="text-2xl font-bold mt-1 text-blue-400">84.2%</h3>
+                    <p class="mt-2 text-xs text-gray-400">Validated on 2026 Test Set</p>
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div id="portfolio-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 glass p-6 rounded-2xl shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">MTNN - Price Action & OHLC Candlesticks</h3>
-                    <div id="candlestick-chart" class="w-full h-80"></div>
+            <!-- Equity Matrix with Clickable Row Items -->
+            <section id="matrix-section" class="glass p-6 rounded-2xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-bold">Interactive NGX Equity Matrix</h3>
+                        <p class="text-xs text-gray-400">Click any row or button to load variable features & trigger instant inference.</p>
+                    </div>
                 </div>
-                <div class="glass p-6 rounded-2xl shadow-sm">
-                    <h3 class="text-lg font-bold mb-4">Portfolio Yield Curve</h3>
-                    <div id="portfolio-growth-chart" class="w-full h-80"></div>
-                </div>
-            </div>
 
-            <!-- Equity Matrix -->
-            <div id="matrix-section" class="glass p-6 rounded-2xl shadow-sm space-y-4">
-                <h3 class="text-lg font-bold">NGX Equity Matrix</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="text-xs text-gray-400 uppercase bg-gray-800/40 font-mono">
                             <tr>
                                 <th class="p-3">Symbol</th>
-                                <th class="p-3">Company Name</th>
+                                <th class="p-3">Company</th>
                                 <th class="p-3 text-right">Close Price</th>
+                                <th class="p-3 text-right">RSI (14)</th>
+                                <th class="p-3 text-right">SMA 20</th>
                                 <th class="p-3 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody id="equity-matrix-body" class="divide-y divide-gray-800 text-xs">
-                            <tr class="hover:bg-gray-800/30 transition">
-                                <td class="p-3 font-bold text-white">MTNN</td>
-                                <td class="p-3 text-gray-300">MTN Nigeria Communications Plc</td>
-                                <td class="p-3 text-right font-mono font-bold">₦235.00</td>
-                                <td class="p-3 text-right">
-                                    <button onclick="openTickerModal('MTNN','MTN Nigeria Plc','Telecommunications',230.5,235,238,229,'BULLISH ACCUMULATION','87.4%')" class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-ngx-accent transition">Inspect</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-800/30 transition">
-                                <td class="p-3 font-bold text-white">DANGCEM</td>
-                                <td class="p-3 text-gray-300">Dangote Cement Plc</td>
-                                <td class="p-3 text-right font-mono font-bold">₦655.00</td>
-                                <td class="p-3 text-right">
-                                    <button onclick="openTickerModal('DANGCEM','Dangote Cement Plc','Industrial Goods',640,655,660,638,'STRONG BUY','92.1%')" class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-ngx-accent transition">Inspect</button>
-                                </td>
-                            </tr>
+                            <!-- Populated dynamically by JavaScript -->
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section id="charts-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass p-6 rounded-2xl">
+                    <h3 class="text-lg font-bold mb-4">MTNN</h3>
+                    <div id="candlestick-chart" class="w-full h-80"></div>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <h3 class="text-lg font-bold mb-4">Portfolio Yield Growth</h3>
+                    <div id="portfolio-growth-chart" class="w-full h-80"></div>
+                </div>
+            </section>
+
         </div>
     </main>
 
     <!-- Script Suite -->
     <script>
-        // -------------------------------------------------------------
-        // AUTHENTICATION ENGINE & LOCALSTORAGE SESSION HANDLER
-        // -------------------------------------------------------------
-        let currentUser = JSON.parse(localStorage.getItem('ngx_user')) || {
-            name: "Luky Seun",
-            email: "seun@firm.com",
-            role: "Senior Equity Strategist"
-        };
+        // Explicit Target Endpoint Base URL
+        const API_BASE_URL = 'http://127.0.0.1:8000';
 
-        function updateAuthUI() {
-            const guestGroup = document.getElementById('auth-guest-group');
-            const userGroup = document.getElementById('auth-user-group');
-            const nameDisplay = document.getElementById('header-user-name');
-            const roleDisplay = document.getElementById('header-user-role');
-            const avatarImg = document.getElementById('header-avatar');
+        // Store for equities returned from backend
+        let localEquities = {};
+        let activeModalTicker = "MTNN";
 
-            if (currentUser) {
-                guestGroup.classList.add('hidden');
-                guestGroup.classList.remove('flex');
-                userGroup.classList.remove('hidden');
-                userGroup.classList.add('relative');
-                if (nameDisplay) nameDisplay.innerText = currentUser.name;
-                if (roleDisplay) roleDisplay.innerText = currentUser.role || 'Quant Analyst';
-                if (avatarImg) avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10B981&color=fff`;
-            } else {
-                guestGroup.classList.remove('hidden');
-                guestGroup.classList.add('flex');
-                userGroup.classList.add('hidden');
-            }
-        }
-
-        function openLoginModal() {
-            document.getElementById('login-modal').classList.remove('hidden');
-            document.getElementById('signup-modal').classList.add('hidden');
-        }
-
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-        }
-
-        function openSignupModal() {
-            document.getElementById('signup-modal').classList.remove('hidden');
-            document.getElementById('login-modal').classList.add('hidden');
-        }
-
-        function closeSignupModal() {
-            document.getElementById('signup-modal').classList.add('hidden');
-        }
-
-        function switchToSignup() {
-            closeLoginModal();
-            openSignupModal();
-        }
-
-        function switchToLogin() {
-            closeSignupModal();
-            openLoginModal();
-        }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            currentUser = {
-                name: email.split('@')[0].toUpperCase(),
-                email: email,
-                role: "Institutional Trader"
-            };
-            localStorage.setItem('ngx_user', JSON.stringify(currentUser));
-            updateAuthUI();
-            closeLoginModal();
-            showToast('Authentication Successful', `Welcome back, ${currentUser.name}`);
-        }
-
-        function handleSignup(event) {
-            event.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            currentUser = {
-                name: name,
-                email: email,
-                role: "Equity Strategist"
-            };
-            localStorage.setItem('ngx_user', JSON.stringify(currentUser));
-            updateAuthUI();
-            closeSignupModal();
-            showToast('Account Created', `Institutional account registered for ${name}`);
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('ngx_user');
-            currentUser = null;
-            updateAuthUI();
-            showToast('Signed Out', 'You have been logged out of the trading gateway.');
-        }
-
-        // -------------------------------------------------------------
-        // TOAST NOTIFICATION SYSTEM
-        // -------------------------------------------------------------
-        function showToast(title, message) {
+        // Toast Notification Function
+        function showToast(title, message, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'glass p-4 rounded-xl border border-gray-700 shadow-2xl flex items-start space-x-3 pointer-events-auto toast-enter w-80 text-xs bg-gray-900/95';
+            toast.className = `glass p-4 rounded-xl border ${isError ? 'border-red-600 bg-red-950/90' : 'border-gray-700 bg-gray-900/95'} shadow-2xl flex items-start space-x-3 pointer-events-auto toast-enter w-80 text-xs`;
             toast.innerHTML = `
-                <div class="p-2 bg-ngx-accent/20 text-ngx-accent rounded-lg shrink-0"><i class="fas fa-bell"></i></div>
+                <div class="p-2 ${isError ? 'bg-red-500/20 text-red-400' : 'bg-ngx-accent/20 text-ngx-accent'} rounded-lg shrink-0">
+                    <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                </div>
                 <div class="flex-1">
                     <h4 class="font-bold text-white mb-0.5">${title}</h4>
-                    <p class="text-gray-400">${message}</p>
+                    <p class="text-gray-300">${message}</p>
                 </div>
             `;
             container.appendChild(toast);
@@ -574,87 +380,204 @@
             }, 3500);
         }
 
-        // -------------------------------------------------------------
-        // API INSPECTOR MODAL HANDLERS
-        // -------------------------------------------------------------
-        function openApiInspector() {
-            document.getElementById('api-inspector-modal').classList.remove('hidden');
+        // Fetch Equities from Backend API
+        async function fetchEquities() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/equities`);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    localEquities = result.data;
+                    renderEquityTable(localEquities);
+                }
+            } catch (err) {
+                console.error("Error connecting to backend equities API:", err);
+            }
         }
 
-        function closeApiInspector() {
-            document.getElementById('api-inspector-modal').classList.add('hidden');
-        }
+        // Render Interactive Equity Matrix Table
+        function renderEquityTable(data) {
+            const tbody = document.getElementById('equity-matrix-body');
+            tbody.innerHTML = '';
 
-        function testEndpoint(method, endpoint) {
-            document.getElementById('inspector-endpoint-title').innerText = `${method} ${endpoint}`;
-            const targetEl = document.getElementById('inspector-json');
-            targetEl.innerText = 'Executing call...';
-            
-            setTimeout(() => {
-                const samplePayloads = {
-                    '/signup': { status: 201, message: "User account created successfully", token: "eyJhbGciOiJIUzI1Ni..." },
-                    '/login': { status: 200, access_token: "eyJhbGciOiJIUzI1Ni...", token_type: "bearer" },
-                    '/predict': { symbol: "MTNN", prediction: "BULLISH", confidence: 0.874, target_price: 248.50 }
+            Object.keys(data).forEach(ticker => {
+                const item = data[ticker];
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition cursor-pointer group';
+                tr.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        selectTickerForDesk(ticker);
+                    }
                 };
-                targetEl.innerText = JSON.stringify(samplePayloads[endpoint] || { status: 200, response: "OK" }, null, 2);
-            }, 400);
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-white font-mono group-hover:text-ngx-accent transition">${ticker}</td>
+                    <td class="p-3 text-gray-300">${item.company}</td>
+                    <td class="p-3 text-right font-mono font-bold">₦${item.close_price.toFixed(2)}</td>
+                    <td class="p-3 text-right font-mono text-blue-400">${item.rsi_14.toFixed(1)}</td>
+                    <td class="p-3 text-right font-mono text-purple-400">₦${item.sma_20.toFixed(2)}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="openTickerModal('${ticker}')" class="px-3 py-1 bg-gray-800 hover:bg-ngx-accent text-white font-semibold rounded transition text-xs">
+                            Inspect & Predict
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        function copyInspectorOutput() {
-            const content = document.getElementById('inspector-json').innerText;
-            navigator.clipboard.writeText(content);
-            showToast('Copied', 'JSON output copied to clipboard.');
+        // Select Ticker and Populate Input Form
+        function selectTickerForDesk(ticker) {
+            document.getElementById('input-ticker').value = ticker;
+            loadSelectedTickerData();
+            showToast('Ticker Loaded', `${ticker} variables loaded into Quant Prediction Engine.`);
         }
 
-        // -------------------------------------------------------------
-        // TICKER MODAL & ORDER EXECUTION
-        // -------------------------------------------------------------
-        function openTickerModal(symbol, company, sector, open, close, high, low, target, confidence) {
-            document.getElementById('modal-ticker-symbol').innerText = symbol;
-            document.getElementById('modal-ticker-company').innerText = company;
-            document.getElementById('modal-ticker-sector').innerText = sector;
-            document.getElementById('modal-open').innerText = `₦${open.toFixed(2)}`;
-            document.getElementById('modal-close').innerText = `₦${close.toFixed(2)}`;
-            document.getElementById('modal-high').innerText = `₦${high.toFixed(2)}`;
-            document.getElementById('modal-low').innerText = `₦${low.toFixed(2)}`;
-            document.getElementById('modal-target-badge').innerText = target;
-            document.getElementById('modal-confidence-text').innerText = confidence;
-            document.getElementById('ticker-modal').classList.remove('hidden');
+        function loadSelectedTickerData() {
+            const ticker = document.getElementById('input-ticker').value;
+            const item = localEquities[ticker];
+
+            if (item) {
+                document.getElementById('input-open').value = item.open_price;
+                document.getElementById('input-close').value = item.close_price;
+                document.getElementById('input-rsi').value = item.rsi_14;
+                document.getElementById('input-sma10').value = item.sma_10;
+                document.getElementById('input-sma20').value = item.sma_20;
+            }
+        }
+
+        // Execute Live Backend Quant Prediction
+        async function runQuantPrediction() {
+            const btn = document.getElementById('btn-run-predict');
+            const statusTag = document.getElementById('predict-status-tag');
+            
+            const ticker = document.getElementById('input-ticker').value;
+            const open_price = parseFloat(document.getElementById('input-open').value) || 0;
+            const close_price = parseFloat(document.getElementById('input-close').value) || 0;
+            const rsi_14 = parseFloat(document.getElementById('input-rsi').value) || 0;
+            const sma_10 = parseFloat(document.getElementById('input-sma10').value) || 0;
+            const sma_20 = parseFloat(document.getElementById('input-sma20').value) || 0;
+            const daily_return = open_price > 0 ? (close_price - open_price) / open_price : 0;
+
+            const payload = { ticker, open_price, close_price, daily_return, rsi_14, sma_10, sma_20 };
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin text-lg"></i><span>EXECUTING INFERENCE...</span>`;
+            statusTag.innerText = "CALCULATING";
+            statusTag.className = "px-2 py-0.5 text-[10px] bg-yellow-900/50 text-yellow-300 rounded font-mono animate-pulse";
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(errData.detail || errData)}`);
+                }
+
+                const res = await response.json();
+
+                // Update Output UI
+                const signalEl = document.getElementById('output-signal');
+                signalEl.innerText = res.signal;
+                signalEl.className = `text-xl font-black mt-0.5 ${res.prediction === 1 ? 'text-ngx-accent' : 'text-red-500'}`;
+
+                document.getElementById('output-confidence').innerText = `${res.confidence}%`;
+                document.getElementById('output-target').innerText = `₦${res.target_price.toFixed(2)}`;
+                document.getElementById('output-source').innerText = res.model_source;
+
+                statusTag.innerText = "SUCCESS 200";
+                statusTag.className = "px-2 py-0.5 text-[10px] bg-emerald-900/50 text-emerald-300 rounded font-mono";
+
+                showToast('Prediction Executed', `Backend ML model completed inference for ${ticker}.`);
+            } catch (err) {
+                console.error("Prediction catch error:", err);
+                showToast('Inference Error', err.message || 'Failed to reach backend endpoint.', true);
+                statusTag.innerText = "ERROR";
+                statusTag.className = "px-2 py-0.5 text-[10px] bg-red-900/50 text-red-300 rounded font-mono";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-bolt text-yellow-300 text-lg"></i><span>EXECUTE BACKEND QUANT PREDICTION</span>`;
+            }
+        }
+
+        // Ticker Inspection Modal Handlers
+        function openTickerModal(ticker) {
+            activeModalTicker = ticker;
+            const item = localEquities[ticker];
+
+            if (item) {
+                document.getElementById('modal-ticker-symbol').innerText = ticker;
+                document.getElementById('modal-ticker-company').innerText = item.company;
+                document.getElementById('modal-ticker-sector').innerText = item.sector;
+                document.getElementById('modal-open').innerText = `₦${item.open_price.toFixed(2)}`;
+                document.getElementById('modal-close').innerText = `₦${item.close_price.toFixed(2)}`;
+                document.getElementById('modal-rsi').innerText = item.rsi_14.toFixed(1);
+                document.getElementById('modal-sma20').innerText = `₦${item.sma_20.toFixed(2)}`;
+                
+                // Reset prediction state in modal
+                document.getElementById('modal-signal-badge').innerText = "AWAITING INFERENCE...";
+                document.getElementById('modal-confidence-text').innerText = "--%";
+                document.getElementById('modal-confidence-bar').style.width = "0%";
+                document.getElementById('modal-target-price').innerText = "₦--";
+
+                document.getElementById('ticker-modal').classList.remove('hidden');
+                
+                // Auto trigger inference in modal
+                executeModalPrediction();
+            }
         }
 
         function closeTickerModal() {
             document.getElementById('ticker-modal').classList.add('hidden');
         }
 
-        function executeOrder(type) {
-            const symbol = document.getElementById('modal-ticker-symbol').innerText;
-            closeTickerModal();
-            showToast('Order Transmitted', `${type} order executed for ${symbol} via NGX DMA Router.`);
+        async function executeModalPrediction() {
+            const item = localEquities[activeModalTicker];
+            if (!item) return;
+
+            const payload = {
+                ticker: activeModalTicker,
+                open_price: item.open_price,
+                close_price: item.close_price,
+                daily_return: item.daily_return,
+                rsi_14: item.rsi_14,
+                sma_10: item.sma_10,
+                sma_20: item.sma_20
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const res = await response.json();
+
+                const badge = document.getElementById('modal-signal-badge');
+                badge.innerText = res.signal;
+                badge.className = `mt-1 inline-block px-3 py-1 rounded text-xs font-bold border ${res.prediction === 1 ? 'bg-emerald-900/40 text-ngx-accent border-emerald-700/50' : 'bg-red-900/40 text-red-400 border-red-700/50'}`;
+
+                document.getElementById('modal-confidence-text').innerText = `${res.confidence}%`;
+                document.getElementById('modal-confidence-bar').style.width = `${res.confidence}%`;
+                document.getElementById('modal-confidence-bar').className = res.prediction === 1 ? 'bg-ngx-accent h-2 transition-all duration-500' : 'bg-red-500 h-2 transition-all duration-500';
+                document.getElementById('modal-target-price').innerText = `₦${res.target_price.toFixed(2)}`;
+                document.getElementById('modal-model-source').innerText = res.model_source;
+            } catch (err) {
+                console.error("Modal prediction error:", err);
+            }
         }
 
-        // -------------------------------------------------------------
-        // THEME TOGGLE & TABLE SEARCH
-        // -------------------------------------------------------------
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-        }
-
-        function searchTable() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const rows = document.querySelectorAll('#equity-matrix-body tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
-        }
-
-        // -------------------------------------------------------------
-        // APEXCHARTS INITIALIZATION
-        // -------------------------------------------------------------
+        // Initialize App & Charts
         document.addEventListener('DOMContentLoaded', () => {
-            updateAuthUI();
+            fetchEquities();
 
-            // Candlestick Chart Options
+            // Candlestick Chart
             const candleOptions = {
                 chart: { type: 'candlestick', height: 320, toolbar: { show: false }, background: 'transparent' },
                 theme: { mode: 'dark' },
@@ -673,7 +596,7 @@
             };
             new ApexCharts(document.querySelector("#candlestick-chart"), candleOptions).render();
 
-            // Portfolio Growth Chart Options
+            // Area Growth Chart
             const areaOptions = {
                 chart: { type: 'area', height: 320, toolbar: { show: false }, background: 'transparent' },
                 theme: { mode: 'dark' },
