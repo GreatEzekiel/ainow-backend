@@ -194,7 +194,7 @@ async def get_ml_prediction(request: PredictRequest):
     })
 
     return {
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().isoformat(),
         "model_version": "XGBoost-Vector-v4.2",
         "prediction": data
     }
@@ -207,7 +207,7 @@ async def get_market_summary():
         "market_cap_naira_trillion": 58.92,
         "daily_turnover_naira_billion": 14.25,
         "volume_traded_million": 485.2,
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 @app.get("/")
@@ -227,7 +227,7 @@ async def execute_order(order: OrderRequest):
         "executed_price": order.price,
         "quantity": order.quantity,
         "status": "FILLED",
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 
@@ -241,8 +241,8 @@ SECRET_KEY = "YOUR_SUPER_SECRET_KEY_CHANGE_IN_PRODUCTION"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Initialize FastAPI App & Security Scheme
-app = FastAPI(title="Institutional Quant Gateway", version="1.0.0")
+# Initialize Security Scheme (do not re-create FastAPI app)
+# Note: app is already created above
 security = HTTPBearer()
 
 # --- Schemas ---
@@ -286,14 +286,13 @@ def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(securit
 # --- Endpoints ---
 
 @app.get("/")
-def health_check():
+def root_health_check():
     """Root health check to prevent 404s on root hits."""
     return {"status": "online", "docs": "/docs"}
 
-# Handlers for both /login and /api/login to match your gateway logs
-@app.post("/login", response_model=TokenResponse, tags=["Auth"])
-@app.post("/api/login", response_model=TokenResponse, tags=["Auth"])
-def login(payload: LoginRequest):
+# Handler for token-based login (separate from simple demo /api/login above)
+@app.post("/auth/token", response_model=TokenResponse, tags=["Auth"])
+def token_login(payload: LoginRequest):
     """Authenticate user and return JWT access token."""
     # Simple hardcoded check for testing (replace with database authentication)
     if payload.username == "admin" and payload.password == "secret123":
