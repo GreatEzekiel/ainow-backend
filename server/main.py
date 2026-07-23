@@ -11,6 +11,8 @@ import datetime
 import random
 from fastapi.staticfiles import StaticFiles
 import os
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI(
     title="NGX Alpha Labs API Gateway",
@@ -18,9 +20,19 @@ app = FastAPI(
     description="Institutional API for NGX Equities, ML Vector Signals, and Execution"
 )
 
-# Mount the 'public' folder so FastAPI serves index.html at the root URL
+# ... [Your existing FastAPI routes (/api/login, /api/predict, etc.)] ...
+
+# ==========================================
+# STATIC FILE MOUNTING (SERVE FRONTEND & ADMIN)
+# ==========================================
+
+# 1. Mount the secret Admin Portal folder
+if os.path.exists("admin-portal"):
+    app.mount("/admin-portal", StaticFiles(directory="admin-portal", html=True), name="admin_portal")
+
+# 2. Mount the main public frontend at root (Must be added LAST)
 if os.path.exists("public"):
-    app.mount("/", StaticFiles(directory="public", html=True), name="static")
+    app.mount("/", StaticFiles(directory="public", html=True), name="public_frontend")
 
 # CORS Middleware Setup
 app.add_middleware(

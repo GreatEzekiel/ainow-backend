@@ -8,9 +8,11 @@
 // const API_BASE_URL = "http://localhost:8000/api";
 
 // ✅ REPLACE WITH THIS (Right at line 5 in app.js):
-const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:8000/api"
-    : "https://ainow-backend-2.onrender.com/api";
+// const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+//     ? "http://localhost:8000/api"
+//     : "https://ainow-backend-2.onrender.com/api";
+
+const API_BASE_URL = "/api";
 
 // LocalStorage Auth Management
 let currentUser = JSON.parse(localStorage.getItem('ngx_user')) || {
