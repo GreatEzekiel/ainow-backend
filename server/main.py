@@ -9,12 +9,18 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
 import datetime
 import random
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI(
     title="NGX Alpha Labs API Gateway",
     version="2.1.0",
     description="Institutional API for NGX Equities, ML Vector Signals, and Execution"
 )
+
+# Mount the 'public' folder so FastAPI serves index.html at the root URL
+if os.path.exists("public"):
+    app.mount("/", StaticFiles(directory="public", html=True), name="static")
 
 # CORS Middleware Setup
 app.add_middleware(
