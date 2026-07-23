@@ -1,11 +1,25 @@
+import os
+import sys
 import numpy as np
-from backend.training.utils import setup_logger, load_artifact
+
+try:
+    from utils import setup_logger, load_artifact
+except Exception:
+    # Try dynamic import to avoid static import resolution errors in some IDEs
+    try:
+        import importlib
+
+        mod = importlib.import_module("backend.training.utils")
+        setup_logger = getattr(mod, "setup_logger")
+        load_artifact = getattr(mod, "load_artifact")
+    except Exception:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+        from utils import setup_logger, load_artifact
 
 logger = setup_logger("predict_test")
 
-MODEL_PATH = "../ngx_model.pkl"
+MODEL_PATH = "model.pkl" if os.path.exists("model.pkl") else "../model.pkl"
 
-# Feature order: ["open_price", "close_price", "daily_return", "rsi_14", "sma_10", "sma_20"]
 SAMPLE_INPUT = {
     "ticker": "DANGCEM",
     "open_price": 280.00,

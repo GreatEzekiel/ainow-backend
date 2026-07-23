@@ -1,6 +1,13 @@
 import numpy as np
 import pandas as pd
-from backend.training.utils import setup_logger
+import importlib
+
+# Try to import setup_logger from the project package; fall back to local utils
+try:
+    _utils = importlib.import_module("backend.training.utils")
+    setup_logger = getattr(_utils, "setup_logger")
+except Exception:
+    from utils import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -34,8 +41,9 @@ def generate_features(df: pd.DataFrame) -> pd.DataFrame:
     # Binary Target: 1 if next day's close price is higher than current close, else 0
     df["target"] = grouped["close_price"].transform(lambda x: (x.shift(-1) > x).astype(int))
 
-    # Drop the final row per ticker since target shift(-1) creates a NaN target
-    df = df.groupby("ticker").apply(lambda x: x.iloc[:-1]).reset_index(drop=True)
+    # Drop the final row per ticker group without losing the 'ticker' column
+    last_indices = df.groupby("ticker").tail(1).index
+    df = df.drop(index=last_indices).reset_index(drop=True)
 
     logger.info("Features engineered successfully: ['daily_return', 'rsi_14', 'sma_10', 'sma_20']")
     return df
