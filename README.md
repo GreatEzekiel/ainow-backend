@@ -1,4 +1,3 @@
-
 ## Stock Direction Prediction & Quantitative Trading Pipeline
 An Enterprise-Grade Machine Learning, Deep Learning (PyTorch LSTM), and MLOps Framework for Equity Direction Classification
 
@@ -6,11 +5,18 @@ An Enterprise-Grade Machine Learning, Deep Learning (PyTorch LSTM), and MLOps Fr
 Financial markets are intricate, non-linear environments where classical theories like the Efficient Market Hypothesis suggest that asset prices reflect all available information. However, advancements in computational econometrics reveal structured dependencies in price formation, enabling the prediction of stock price movements. This document introduces a comprehensive Quantitative Data Science and Machine Learning System aimed at forecasting next-day movements in liquid equities. By integrating technical indicators and financial principles with deep learning architectures, the system enhances prediction accuracy while providing a robust MLOps framework for institutional deployment, including features like automated data pipelines and real-time monitoring.
 
 # Key Technical Capabilities
-• Robust Data Preprocessing & Imputation:  Automated data cleaning, IQR-based capping, and rigorous MICE imputation benchmarking validated against masked observation grids.
+
+• Robust Data Preprocessing & Imputation: 
+Automated data cleaning, IQR-based capping, and rigorous MICE imputation benchmarking validated against masked observation grids.
+
 • Advanced Quantitative Feature Engineering:  Construction of over 30 domain-specific indicators alongside 6 financial microstructure theories (Ornstein-Uhlenbeck, Amihud, Hurst persistence, Volatility clustering).
+
 • Multi-Model Estimator Suite:  Comprehensive model evaluation spanning tuned Gradient Boosted Decision Trees (XGBoost, LightGBM, CatBoost), Random Forests, and ExtraTrees.
+
 • Deep Sequence Neural Networks (PyTorch LSTM):  Custom PyTorch 2-layer LSTM sequence model engineered to capture temporal cross-ticker dependencies.
+
 • Stacking Meta-Ensemble Architecture:  Multi-tier stacking classifier utilizing calibrated Logistic Regression to blend neural representations and tree decision boundaries.
+
 • Institutional Production Infrastructure:  Modular FastAPI REST API, WebSocket real-time data manager, JWT authentication, and Docker Compose orchestration.
 
 # 👥 Project Contributors & Team Leadership Roles
