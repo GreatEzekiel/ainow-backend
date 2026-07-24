@@ -17,19 +17,21 @@ Financial markets are intricate, non-linear environments where classical theorie
 This project was engineered by Group 6. Technical leadership and execution responsibilities were distributed across management, frontend/backend engineering, quantitative feature design, data modeling, and MLOps deployment:
 Contributor	Leadership & Technical Role	Primary Responsibilities & Key Contributions
  
-# Adejare Ezekiel	Team Lead	Executive governance, end-to-end system architecture design, pipeline integration, and cross-functional team coordination.
+# Adejare Ezekiel	Team Lead	
+Executive governance, end-to-end system architecture design, pipeline integration, and cross-functional team coordination.
 
-# Esther Adeleke	Assistant Team Lead	Operations management, pipeline code refactoring, quality assurance, code optimization, and technical documentation.
-
-# Oluwakoya Hephzibah	Backend Team Lead	FastAPI microservice architecture design, database ORM schemas (PostgreSQL), model artifact serialization, and WebSocket manager implementation.
-
-# Seun Bayo Olorunnisomo	Frontend Team Lead & Preprocessing	Interactive analytics dashboard engineering, real-time WebSocket client integration, raw data profiling, and custom OutlierCapper transformer design.
-
-# Aguda Lucky	Data Modelling Lead	Model architecture selection, PyTorch 2-layer LSTM sequence implementation, GBDT hyperparameter tuning, and Stacking Meta-Classifier construction.
-
-# Sarah Bunmi Salau	Quantitative Feature Lead	Technical momentum indicator extraction (MACD, RSI, ATR, OBV) and market microstructure theory implementation (Amihud, Ornstein-Uhlenbeck).
-
-# Eno Ekpose	Model Evaluation & QA Lead	Cross-validation strategy design (StratifiedKFold), metric evaluation framework (ROC-AUC, Precision, Recall, F1), and model benchmarking suite.
+# Esther Adeleke	Assistant Team Lead	
+Operations management, pipeline code refactoring, quality assurance, code optimization, and technical documentation.
+# Oluwakoya Hephzibah	Research Lead
+FastAPI microservice architecture design, database ORM schemas (PostgreSQL), model artifact serialization, and WebSocket manager implementation.
+# Seun Bayo Olorunnisomo	Frontend Team Lead & Preprocessing	
+Interactive analytics dashboard engineering, real-time WebSocket client integration, raw data profiling, and custom OutlierCapper transformer design.
+# Aguda Lucky	Data Modelling Lead	
+Model architecture selection, PyTorch 2-layer LSTM sequence implementation, GBDT hyperparameter tuning, and Stacking Meta-Classifier construction.
+# Sarah Bunmi Salau	Quantitative Feature Lead	
+Technical momentum indicator extraction (MACD, RSI, ATR, OBV) and market microstructure theory implementation (Amihud, Ornstein-Uhlenbeck).
+# Eno Ekpose	Model Evaluation & QA Lead	
+Cross-validation strategy design (StratifiedKFold), metric evaluation framework (ROC-AUC, Precision, Recall, F1), and model benchmarking suite.
 
 # 🛠️ Repository & System Directory Structure
 The project follows a clean, modular repository organization separating interactive research notebooks from production backend scripts:
