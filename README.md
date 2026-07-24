@@ -90,9 +90,13 @@ In addition to standard momentum technicals (EMA, SMA_10, SMA_50, RSI_14, MACD, 
 6. Behavioral High Anchoring: Price ratio relative to its trailing 252-day (1-year) high.
 
 # Phase 3: Model Zoo, PyTorch LSTM & Meta-Ensembling
+
 The pipeline evaluates multiple estimator paradigms to maximize decision boundary coverage:
+
 • Gradient Boosted Decision Trees: RandomForest, ExtraTrees, XGBoost, LightGBM, and CatBoost fine-tuned using RandomizedSearchCV with StratifiedKFold cross-validation.
+
 • Deep Sequence Model (PyTorch LSTM): A 2-layer Recurrent Neural Network with Dropout (0.2) and Dense FC layers engineered to learn temporal cross-ticker price sequence dynamics.
+
 • Stacking Meta-Ensemble: A multi-tier stacking classifier utilizing calibrated Logistic Regression to blend probability outputs from MLPClassifier, ExtraTreesClassifier, and HistGradientBoostingClassifier.
 
 # 📈 Model Performance Benchmark Summary
