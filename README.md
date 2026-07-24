@@ -37,19 +37,33 @@ Cross-validation strategy design (StratifiedKFold), metric evaluation framework 
 The project follows a clean, modular repository organization separating interactive research notebooks from production backend scripts:
 .
 ├── stock_pred_group6updated.ipynb   # Main Jupyter Notebook (EDA, Engineering, Modeling, LSTM, Stacking)
+
 ├── train_model.py                  # CLI & automated model training pipeline entry point
+
 ├── preprocess.py                 # Automated market data cleaning, capping & scaling pipeline
+
 ├── feature_engineering.py          # Domain & financial theory feature generation functions
+
 ├── evaluate_model.py              # Performance metric calculation & validation logger
+
 ├── predict_test.py                # Inference script for test dataset predictions
+
 ├── model.pkl                      # Serialized trained model artifact
+
 ├── database.py                    # PostgreSQL ORM database connection & schemas
+
 ├── dashboard.py                   # Real-time analytics dashboard backend service
+
 ├── websocket_manager.py           # Real-time WebSocket connection manager
+
 ├── auth.py                        # JWT API authentication & security module
+
 ├── seed_db.py                     # Database initial seeding script
+
 ├── Dockerfile                     # Production container image build specification
+
 ├── docker-compose.yml             # Multi-container orchestration (FastAPI + PostgreSQL)
+
 └── Data.xlsx                      # Raw financial market dataset
 
 # 🔬 Methodology & Technical Pipeline Phases
