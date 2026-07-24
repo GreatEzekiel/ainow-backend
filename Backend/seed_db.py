@@ -3,8 +3,8 @@ import sys
 import pandas as pd
 from sqlalchemy.orm import Session
 
-from database import Base, SessionLocal, engine
-import models
+from Backend.database import Base, SessionLocal, engine
+import Backend.models as models
 from preprocess import clean_market_data
 from feature_engineering import generate_features
 
